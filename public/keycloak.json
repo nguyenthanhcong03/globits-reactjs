@@ -1,0 +1,7 @@
+{
+  "realm": "HrPlatform",
+  "auth-server-url": "https://sso.globits.net/auth",
+  "ssl-required": "none",
+  "resource": "HrClient",
+  "public-client": true
+}
