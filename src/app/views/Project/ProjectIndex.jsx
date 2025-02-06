@@ -1,18 +1,18 @@
-import { Icon, TextField } from "@material-ui/core";
+import React, { useEffect } from "react";
+import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
+import AddCircleOutlineOutlinedIcon from "@material-ui/icons/AddCircleOutlineOutlined";
+import SearchIcon from "@material-ui/icons/Search";
+import InputBase from "@material-ui/core/InputBase";
+import { observer } from "mobx-react";
+import { useStore } from "../../stores";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogTitle from "@material-ui/core/DialogTitle";
-import IconButton from "@material-ui/core/IconButton";
-import InputBase from "@material-ui/core/InputBase";
-import { makeStyles } from "@material-ui/core/styles";
-import AddIcon from "@material-ui/icons/Add";
-import SearchIcon from "@material-ui/icons/Search";
-import { observer } from "mobx-react";
-import { useEffect } from "react";
 import TableCustom from "../../common/staff/TableCustom";
-import { useStore } from "../../stores";
-import DepartmentForm from "./DepartmentForm";
+import IconButton from "@material-ui/core/IconButton";
+import { Icon } from "@material-ui/core";
+import ProjectForm from "./ProjectForm";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -50,24 +50,25 @@ const useStyles = makeStyles((theme) => ({
     height: "100vh",
     zIndex: 1300,
   },
-  searchWrapper: {
+  search: {
     position: "relative",
-    display: "flex",
     borderRadius: theme.shape.borderRadius,
-    width: "500px",
+    border: "1px solid gray",
+    width: "200px",
+    display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "between",
   },
   searchIcon: {
     display: "flex",
     alignItems: "center",
     height: "100%",
     padding: theme.spacing(0, 1),
-    backgroundColor: "#7467EF",
+    backgroundColor: "#01c0c8",
     borderTopRightRadius: theme.shape.borderRadius,
     borderBottomRightRadius: theme.shape.borderRadius,
   },
-  searchInput: {
+  inputInput: {
     paddingLeft: "10px",
   },
   nav: {
@@ -99,31 +100,30 @@ const MaterialButton = ({ item, setSelected, onEdit, onDelete }) => (
     </IconButton>
   </>
 );
-
-export default observer(function DepartmentIndex() {
-  const { departmentStore } = useStore();
+export default observer(function StaffIndex() {
+  const { projectStore } = useStore();
   const {
-    fetchDepartments,
+    search,
     updatePageData,
-    keyword,
     setKeyword,
-    pageIndex,
+    keyword,
     setShouldOpenEditorDialog,
-    setSelectedDepartment,
-    departmentList,
+    setSelected,
+    listData,
     setShouldOpenConfirmationDialog,
-    pageSize,
-    setPageSize,
+    rowsPerPage,
+    setRowsPerPage,
     totalPages,
+    page,
     handleChangePage,
     shouldOpenConfirmationDialog,
     handleConfirmDelete,
-    setSelectedList,
-  } = departmentStore;
+    shouldOpenEditorDialog,
+  } = projectStore;
 
   useEffect(() => {
-    fetchDepartments();
-  }, [pageIndex, pageSize]);
+    search();
+  }, [search]);
 
   const classes = useStyles();
 
@@ -138,33 +138,20 @@ export default observer(function DepartmentIndex() {
     }
   };
 
-  const formatDateTime = (timestamp, includeTime = true) => {
-    const date = new Date(timestamp);
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-
-    if (includeTime) {
-      const hours = date.getHours().toString().padStart(2, "0");
-      const minutes = date.getMinutes().toString().padStart(2, "0");
-      const seconds = date.getSeconds().toString().padStart(2, "0");
-
-      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-    }
-    return `${day}/${month}/${year}`;
-  };
-
   const columns = [
-    { title: "Tên Phòng ban", field: "name" },
-    { title: "Mã phòng ban", field: "code" },
-    { title: "Mô tả", field: "description" },
-    { title: "Khối ngành", field: "industryBlock" },
-    { title: "Số thành lập", field: "foundedNumber" },
     {
-      title: "Ngày thành lập",
-      field: "foundedDate",
-      render: (rowData) => formatDateTime(rowData.foundedDate, false),
+      title: "STT",
+      render: (rowData) => rowData.tableData.id + 1,
+      cellStyle: {
+        paddingLeft: "10px",
+      },
+      headerStyle: {
+        paddingLeft: "10px",
+      },
     },
+    { title: "Mã dự án", field: "code" },
+    { title: "Tên dự án", field: "name" },
+    { title: "Mô tả dự án", field: "description" },
     {
       title: "Hành động",
       render: (rowData) => (
@@ -172,7 +159,7 @@ export default observer(function DepartmentIndex() {
           item={rowData}
           onEdit={setShouldOpenEditorDialog}
           onDelete={setShouldOpenConfirmationDialog}
-          setSelected={setSelectedDepartment}
+          setSelected={setSelected}
         />
       ),
     },
@@ -186,25 +173,21 @@ export default observer(function DepartmentIndex() {
           color="primary"
           disableElevation
           className={classes.button}
-          startIcon={<AddIcon />}
           onClick={() => {
             setShouldOpenEditorDialog(true);
-            setSelectedDepartment(null);
+            setSelected(null);
           }}
         >
-          Thêm mới
+          Thêm mới <AddCircleOutlineOutlinedIcon />
         </Button>
-        <div className={classes.searchWrapper}>
-          <TextField
-            variant="outlined"
-            fullWidth
-            size="small"
-            placeholder="Tìm kiếm phòng ban"
+        <div className={classes.search}>
+          <InputBase
+            placeholder="search…"
             classes={{
               root: classes.inputRoot,
-              input: classes.searchInput,
+              input: classes.inputInput,
             }}
-            onChange={handleKeyDown}
+            onChange={(e) => handleKeyDown(e)}
             onKeyPress={handleKeyDown}
             inputProps={{ "aria-label": "search" }}
           />
@@ -213,19 +196,19 @@ export default observer(function DepartmentIndex() {
           </div>
         </div>
       </div>
-      <TableCustom
-        rowsPerPage={pageSize}
-        setRowsPerPage={setPageSize}
-        totalPages={totalPages}
-        page={pageIndex}
-        handleChangePage={handleChangePage}
-        title={"Danh sách phòng ban"}
-        datas={departmentList}
-        columns={columns}
-        checkbox={true}
-        setSelectedList={setSelectedList}
-      />
-      <DepartmentForm />
+      <div className={classes.tableContainer}>
+        <TableCustom
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={setRowsPerPage}
+          totalPages={totalPages}
+          page={page}
+          handleChangePage={handleChangePage}
+          title={"Danh sách dự án"}
+          datas={listData}
+          columns={columns}
+        />
+      </div>
+      {shouldOpenEditorDialog && <ProjectForm />}
       {shouldOpenConfirmationDialog && (
         <Dialog
           open={shouldOpenConfirmationDialog}
@@ -243,7 +226,11 @@ export default observer(function DepartmentIndex() {
             >
               Hủy
             </Button>
-            <Button onClick={handleConfirmDelete} color="primary" autoFocus>
+            <Button
+              onClick={() => handleConfirmDelete()}
+              color="primary"
+              autoFocus
+            >
               Xác nhận
             </Button>
           </DialogActions>

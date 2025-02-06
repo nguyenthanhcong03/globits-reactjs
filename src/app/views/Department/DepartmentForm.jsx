@@ -1,191 +1,205 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Modal,
-  Radio,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TextField,
-} from "@material-ui/core";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import React, { useEffect, useState } from "react";
-import { createDepartment, editDepartment } from "./DepartmentService";
+import { makeStyles } from "@material-ui/core/styles";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { FormControlLabel, Radio, TextField } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import TableCustom from "../../common/staff/TableCustom";
+import { observer } from "mobx-react";
+import { useStore } from "../../stores";
+import DatePickers from "../../common/staff/DatePickers";
 
-function DepartmentForm({
-  isOpenForm,
-  onClose,
-  selectedDepartment,
-  departments,
-  loadDepartments,
-}) {
-  const [isShow, setIsShow] = useState(false);
-  const [expanded, setExpanded] = useState({});
-  const [selectedId, setSelectedId] = useState(null);
+const useStyles = makeStyles((theme) => ({
+  wapper: {
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: theme.spacing(2),
+  },
+  itemInput: {
+    width: "45%",
+  },
+  buttonWrapper: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "end",
+    gap: 10,
+    marginTop: 50,
+    marginBottom: 20,
+  },
+  dialogTitleText: {
+    color: "#ffffff",
+    fontWeight: "bold",
+    fontSize: "18px",
+  },
+  parent: {
+    marginBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
+    width: "100%",
+    display: "flex",
+    position: "relative",
+  },
+  parentTextField: {
+    marginBottom: theme.spacing(2),
+    width: "100%",
+  },
+  parentButton: {
+    // position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: "#7467EF",
+  },
+}));
 
-  const handleShow = () => {
-    setIsShow(true);
-  };
-
-  const handleClose = () => {
-    setIsShow(false);
-  };
-
-  const handleSelectRow = () => {
-    if (selectedId) {
-      const selectedRow = departments.find((d) => d.id === selectedId);
-      formik.setFieldValue("parent", {
-        id: selectedRow.id,
-        name: selectedRow.name,
-      });
-      handleClose();
-    }
-  };
-
-  const handleToggle = (id) => {
-    setExpanded((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-  const handleRadioChange = (id) => {
-    setSelectedId(id);
-  };
-
+function DepartmentForm() {
+  const [openDialog, setOpenDialog] = useState(false);
+  const classes = useStyles();
+  const { departmentStore } = useStore();
+  const {
+    departmentList,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pageIndex,
+    handleChangePage,
+    selectedDepartment,
+    shouldOpenEditorDialog,
+    updateDepartment,
+    createDepartment,
+    parent,
+    setParent,
+    setShouldOpenEditorDialog,
+  } = departmentStore;
   const formik = useFormik({
     initialValues: {
-      parent: null,
-      name: "",
-      code: "",
-      description: "",
-      industryBlock: "",
-      foundedNumber: "",
-      foundedDate: new Date(),
-      displayOrder: "",
+      id: selectedDepartment?.id || "",
+      name: selectedDepartment?.name || "",
+      code: selectedDepartment?.code || "",
+      description: selectedDepartment?.description || "",
+      func: selectedDepartment?.func || "",
+      industryBlock: selectedDepartment?.industryBlock || "",
+      foundedNumber: selectedDepartment?.foundedNumber || "",
+      foundedDate: selectedDepartment?.foundedDate
+        ? new Date(selectedDepartment.foundedDate).toISOString().split("T")[0]
+        : "",
+      displayOrder: selectedDepartment?.displayOrder || "",
     },
+    enableReinitialize: true,
     validationSchema: Yup.object({
-      name: Yup.string().required("Name is required"),
-      code: Yup.string().required("Code is required"),
-      description: Yup.string().required("Description is required"),
+      name: Yup.string()
+        .min(2, "Ít nhất 2 ký tự")
+        .max(15, "Nhiều nhất 15 ký tự")
+        .required("Không được bỏ trống!"),
+      code: Yup.string()
+        .min(2, "Ít nhất 2 ký tự")
+        .max(15, "Nhiều nhất 15 ký tự")
+        .required("Không được bỏ trống!"),
+      description: Yup.string()
+        .min(5, "Ít nhất 5 ký tự")
+        .max(500, "Nhiều nhất 500 ký tự")
+        .required("Không được bỏ trống!"),
+      func: Yup.string()
+        .min(2, "Ít nhất 2 ký tự")
+        .max(50, "Nhiều nhất 50 ký tự")
+        .required("Không được bỏ trống!"),
+      industryBlock: Yup.string()
+        .min(2, "Ít nhất 2 ký tự")
+        .max(100, "Nhiều nhất 100 ký tự")
+        .required("Không được bỏ trống!"),
+      foundedNumber: Yup.number()
+        .positive("Số thành lập phải là số dương")
+        .integer("Số thành lập phải là số nguyên")
+        .required("Không được bỏ trống!"),
+      displayOrder: Yup.number()
+        .integer("Hiển thị thứ tự phải là số nguyên")
+        .min(1, "Thứ tự hiển thị phải lớn hơn hoặc bằng 1")
+        .required("Không được bỏ trống!"),
     }),
-
-    onSubmit: (values) => {
-      console.log(values);
-      if (selectedDepartment) {
-        handleEditDepartment(values);
-      } else {
-        handleAddDepartment(values);
+    onSubmit: async (values, { resetForm }) => {
+      const valuesUpdate = {
+        ...values,
+        parent,
+      };
+      try {
+        if (selectedDepartment?.id) {
+          updateDepartment(valuesUpdate);
+        } else {
+          createDepartment(valuesUpdate);
+        }
+        resetForm();
+      } catch (error) {
+        console.error("Error submitting form:", error);
       }
     },
   });
-
-  const handleAddDepartment = async (values) => {
-    try {
-      await createDepartment(values);
-      onClose();
-      loadDepartments();
-    } catch (error) {
-      console.error("Error creating deparment:", error);
-    }
-  };
-
-  const handleEditDepartment = async (values) => {
-    try {
-      await editDepartment(values);
-      onClose();
-      loadDepartments();
-    } catch (error) {
-      console.error("Error editing deparment:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedDepartment) {
-      formik.setValues(selectedDepartment);
-      // formik.setValues({
-      //   ...selectedDepartment,
-      //   parent: selectedDepartment.parent || null, // Gán giá trị cha nếu có
-      // });
-      if (selectedDepartment?.parentId) {
-        setSelectedId(selectedDepartment.parentId); // Đặt hàng cha được chọn
-      }
-    }
-  }, [selectedDepartment]);
-
-  const renderRows = (departments, level = 0) => {
-    return departments.map((department) => (
-      <React.Fragment key={department.id}>
-        <TableRow>
-          <TableCell style={{ paddingLeft: level * 10 }}>
-            {department.children && department.children.length > 0 && (
-              <IconButton onClick={() => handleToggle(department.id)}>
-                {expanded[department.id] ? (
-                  <ExpandMoreIcon />
-                ) : (
-                  <ChevronRightIcon />
-                )}
-              </IconButton>
-            )}
-          </TableCell>
-          <TableCell style={{ paddingLeft: level * 10 }}>
-            <Radio
-              checked={selectedId === department.id}
-              onChange={() => handleRadioChange(department.id)}
-            />
-          </TableCell>
-          <TableCell>{department.name}</TableCell>
-          <TableCell>{department.code}</TableCell>
-          <TableCell>{department.description}</TableCell>
-        </TableRow>
-        {expanded[department.id] &&
-          department.children &&
-          renderRows(department.children, level + 1)}
-      </React.Fragment>
-    ));
-  };
-
-  return (
-    <div>
-      <Modal open={isOpenForm} onClose={onClose} style={{ cursor: "pointer" }}>
-        <form
-          onSubmit={formik.handleSubmit}
-          style={{
-            width: "1000px",
-            zIndex: "1000",
-            backgroundColor: "white",
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            borderRadius: "5px",
+  const columns = [
+    {
+      title: "Chọn",
+      render: (rowData) => (
+        <FormControlLabel
+          onClick={() => {
+            setParent(rowData);
           }}
-        >
-          <DialogTitle>
-            {selectedDepartment ? "Chỉnh sửa phòng ban" : "Thêm mới phòng ban"}
-          </DialogTitle>
-          <DialogContent
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
+          control={
+            <Radio
+              checked={
+                parent?.id === rowData?.id ||
+                selectedDepartment?.parent?.id === rowData?.id
+              }
+            />
+          }
+        />
+      ),
+      sorting: false,
+      filtering: false,
+    },
+    {
+      title: "Phòng ban trực thuộc",
+      render: (rowData) =>
+        rowData?.parent?.name ? rowData?.parent?.name : "Không có",
+    },
+    { title: "Tên phòng ban", field: "name" },
+    { title: "Mã phòng ban", field: "code" },
+    { title: "Mô tả", field: "description" },
+    { title: "Chức năng", field: "func" },
+    { title: "Khối ngành", field: "industryBlock" },
+    { title: "Số thành lập", field: "foundedNumber" },
+    { title: "Ngày thành lập", field: "foundedDate" },
+    { title: "Thứ tự hiển thị", field: "displayOrder" },
+  ];
+  useEffect(() => {
+    formik.resetForm();
+  }, [openDialog]);
+  return (
+    <>
+      <Dialog
+        open={shouldOpenEditorDialog}
+        onClose={() => setShouldOpenEditorDialog(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {selectedDepartment?.id
+            ? "Chỉnh sửa phòng ban"
+            : "Thêm mới phòng ban"}
+        </DialogTitle>
+        <DialogContent>
+          <div className={classes.parent}>
             <TextField
-              placeholder="Đơn vị trực thuộc"
-              margin="normal"
-              // label="Đơn vị trực thuộc"
+              className={classes.parentTextField}
+              label="Đơn vị trực thuộc"
               variant="outlined"
-              fullWidth
-              name="parent"
-              value={formik.values.parent?.name}
-              // onChange={formik.handleChange}
+              color="secondary"
+              disabled
+              value={
+                selectedDepartment?.parent?.name
+                  ? selectedDepartment.name
+                  : parent?.name || ""
+              }
               InputProps={{
                 shrink: true,
                 readOnly: true,
@@ -193,7 +207,7 @@ function DepartmentForm({
                   <Button
                     variant="contained"
                     color="action"
-                    onClick={handleShow}
+                    onClick={() => setOpenDialog(true)}
                     style={{ width: "100px" }}
                   >
                     Chọn
@@ -201,125 +215,181 @@ function DepartmentForm({
                 ),
               }}
             />
+          </div>
+          <form onSubmit={formik.handleSubmit}>
+            <div className={classes.wapper}>
+              <TextField
+                className={classes.itemInput}
+                label="Tên phòng ban"
+                variant="outlined"
+                color="secondary"
+                name="name"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+              />
+              <TextField
+                className={classes.itemInput}
+                label="Mã phòng ban"
+                variant="outlined"
+                color="secondary"
+                name="code"
+                value={formik.values.code}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.code && Boolean(formik.errors.code)}
+                helperText={formik.touched.code && formik.errors.code}
+              />
+              <TextField
+                className={classes.itemInput}
+                label="Mô tả"
+                variant="outlined"
+                color="secondary"
+                name="description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.description &&
+                  Boolean(formik.errors.description)
+                }
+                helperText={
+                  formik.touched.description && formik.errors.description
+                }
+              />
 
-            <TextField
-              label="Tên phòng ban"
-              fullWidth
-              variant="outlined"
-              name="name"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-            />
-            <TextField
-              label="Mã phòng ban"
-              variant="outlined"
-              fullWidth
-              name="code"
-              value={formik.values.code}
-              onChange={formik.handleChange}
-            />
-            <TextField
-              label="Mô tả"
-              variant="outlined"
-              fullWidth
-              name="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-            />
-            <TextField
-              label="Khối ngành"
-              variant="outlined"
-              fullWidth
-              name="industryBlock"
-              value={formik.values.industryBlock}
-              onChange={formik.handleChange}
-            />
-            <TextField
-              label="Số thành lập"
-              variant="outlined"
-              fullWidth
-              name="foundedNumber"
-              value={formik.values.foundedNumber}
-              onChange={formik.handleChange}
-            />
-            <TextField
-              id="date"
-              label="Ngày thành lập"
-              type="date"
-              fullWidth
-              variant="outlined"
-              name="foundedDate"
-              // defaultValue="2017-05-24"
-              value={formik.values.foundedDate}
-              onChange={formik.handleChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-            <TextField
-              label="Thứ tự hiển thị"
-              variant="outlined"
-              fullWidth
-              name="displayOrder"
-              value={formik.values.displayOrder}
-              onChange={formik.handleChange}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={onClose} color="primary">
-              Hủy
-            </Button>
-            <Button color="primary" type="submit">
-              {selectedDepartment ? "Lưu" : "Thêm"}
-            </Button>
-          </DialogActions>
-        </form>
-      </Modal>
-      {isShow && (
-        <Dialog open={isShow} onClose={handleClose}>
-          <DialogTitle>Chọn phòng ban trực thuộc</DialogTitle>
+              <TextField
+                className={classes.itemInput}
+                label="Chức năng"
+                variant="outlined"
+                color="secondary"
+                name="func"
+                value={formik.values.func}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.func && Boolean(formik.errors.func)}
+                helperText={formik.touched.func && formik.errors.func}
+              />
+
+              <TextField
+                className={classes.itemInput}
+                label="Khối ngành"
+                variant="outlined"
+                color="secondary"
+                name="industryBlock"
+                value={formik.values.industryBlock}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.industryBlock &&
+                  Boolean(formik.errors.industryBlock)
+                }
+                helperText={
+                  formik.touched.industryBlock && formik.errors.industryBlock
+                }
+              />
+              <TextField
+                className={classes.itemInput}
+                label="Số thành lập"
+                variant="outlined"
+                color="secondary"
+                name="foundedNumber"
+                type="number"
+                value={formik.values.foundedNumber}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.foundedNumber &&
+                  Boolean(formik.errors.foundedNumber)
+                }
+                helperText={
+                  formik.touched.foundedNumber && formik.errors.foundedNumber
+                }
+              />
+              <DatePickers
+                labelDate="Ngày thành lập"
+                value={
+                  formik.values.foundedDate
+                    ? formik.values.foundedDate
+                    : new Date()
+                }
+                onChange={(date) => formik.setFieldValue("foundedDate", date)}
+                isTime={false}
+                className={classes.itemInput}
+              />
+              <TextField
+                className={classes.itemInput}
+                label="Thứ tự hiển thị"
+                variant="outlined"
+                color="secondary"
+                name="displayOrder"
+                type="number"
+                value={formik.values.displayOrder}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.displayOrder &&
+                  Boolean(formik.errors.displayOrder)
+                }
+                helperText={
+                  formik.touched.displayOrder && formik.errors.displayOrder
+                }
+              />
+            </div>
+            <div className={classes.buttonWrapper}>
+              <Button
+                variant="contained"
+                color="inherit"
+                onClick={() => setShouldOpenEditorDialog(false)}
+              >
+                Hủy
+              </Button>
+              <Button type="submit" variant="contained" color="primary">
+                {selectedDepartment?.id ? "Lưu" : "Lưu"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {openDialog && (
+        <Dialog
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
           <DialogContent>
-            <Table
-              style={{
-                width: "100%",
-                backgroundColor: "white",
-                margin: "auto",
-                border: "1px solid #e1e1e1",
-              }}
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell style={{ width: "40px" }}></TableCell>
-                  <TableCell style={{ width: "70px" }}></TableCell>
-                  <TableCell>Tên phòng ban</TableCell>
-                  <TableCell>Mã phòng ban</TableCell>
-                  <TableCell>Mô tả</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>{renderRows(departments)}</TableBody>
-            </Table>
-            <TablePagination
-              rowsPerPageOptions={[10, 25, 100]}
-              component="div"
-              // count={rows.length}
-              // rowsPerPage={rowsPerPage}
-              // page={currentPage}
-              // onPageChange={handleChangePage}
-              // onRowsPerPageChange={handleChangeRowsPerPage}
+            <TableCustom
+              rowsPerPage={pageSize}
+              setRowsPerPage={setPageSize}
+              totalPages={totalPages}
+              page={pageIndex}
+              handleChangePage={handleChangePage}
+              title={"Lựa chọn phòng ban"}
+              datas={departmentList}
+              columns={columns}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setIsShow(false)} color="primary">
-              Hủy
+            <Button
+              onClick={() => {
+                setOpenDialog(false);
+                setParent(null);
+              }}
+              color="primary"
+            >
+              Đóng
             </Button>
-            <Button color="primary" type="submit" onClick={handleSelectRow}>
-              Lựa chọn
+            <Button onClick={() => setOpenDialog(false)} color="primary">
+              Lưu
             </Button>
           </DialogActions>
         </Dialog>
       )}
-    </div>
+    </>
   );
 }
 
-export default DepartmentForm;
+export default observer(DepartmentForm);

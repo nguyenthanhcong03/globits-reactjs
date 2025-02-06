@@ -8,6 +8,7 @@ import ConstantList from "./appConfig";
 import countryRoutes from "./views/Country/CountryRoutes";
 import departmentRoutes from "./views/Department/DepartmentRoutes";
 import staffRoutes from "./views/Staff/StaffRoutes";
+import projectRoutes from "./views/Project/ProjectRoutes";
 
 const redirectRoute = [
   {
@@ -32,7 +33,8 @@ const routes = [
   ...countryRoutes,
   ...departmentRoutes,
   ...staffRoutes,
-  ...errorRoute,
+  ...projectRoutes,
+  // ...errorRoute,
 ];
 
 export default routes;

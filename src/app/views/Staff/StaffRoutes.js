@@ -4,6 +4,7 @@ import ConstantList from "../../appConfig";
 const StaffIndex = EgretLoadable({
   loader: () => import("./StaffIndex"),
 });
+
 const ViewComponent = StaffIndex;
 
 const Routes = [

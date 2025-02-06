@@ -67,7 +67,7 @@ export default observer(function CountryIndex() {
 
   useEffect(() => {
     fetchCountries();
-  }, [currentPage, pageSize, debounce]);
+  }, [currentPage, debounce]);
 
   const formik = useFormik({
     initialValues: {
@@ -175,7 +175,7 @@ export default observer(function CountryIndex() {
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[10, 25, 100]}
+        rowsPerPageOptions={[5, 10, 25, 100]}
         labelRowsPerPage="Số hàng mỗi trang:"
         component="div"
         count={totalElements}

@@ -1,18 +1,11 @@
 import {makeAutoObservable, runInAction} from "mobx";
-import {
-    pagingReligions,
-    getReligion,
-    createReligion,
-    editReligion,
-    deleteReligion,
-    getAllReligions,
-    checkCode
-} from "./ReligionService";
+import {deleteProject, getProject, saveProject, searchProjectsByPage, updateProject} from "./ProjectService"
+import "react-toastify/dist/ReactToastify.css";
 import {toast} from "react-toastify";
 
-export default class ReligionStore {
-    religionList = [];
-    selectedReligion = null;
+export default class ProjectStore {
+    listData = [];
+    selected = null;
     totalElements = 0;
     totalPages = 0;
     page = 1;
@@ -26,76 +19,61 @@ export default class ReligionStore {
         makeAutoObservable(this);
     }
 
+
     setLoadingInitial = (state) => {
         this.loadingInitial = state;
     };
 
     setKeyword = (value) => {
-        this.keyword = value;
-    };
+        this.keyword = value;  // Cập nhật 'keyword' trong store
+    }
 
     search = async () => {
         this.loadingInitial = true;
 
         const searchObject = {
-            keyword: this.keyword,
-            pageIndex: this.page,
-            pageSize: this.rowsPerPage,
+            keyword: this.keyword, pageIndex: this.page, pageSize: this.rowsPerPage,
         };
 
         try {
-            let res = await pagingReligions(searchObject);
+            let res = await searchProjectsByPage(searchObject);
 
             runInAction(() => {
-                this.religionList = res?.data?.content || [];
+                this.listData = res?.data?.content || [];
                 this.totalElements = res?.data?.totalElements;
                 this.totalPages = res?.data?.totalPages;
                 this.loadingInitial = false;
             });
         } catch (error) {
-            toast.warning("Failed to load religions.");
-            this.loadingInitial = false;
-        }
-    };
-
-    getAll = async () => {
-        this.loadingInitial = true;
-        try {
-            let res = await getAllReligions();
-
-            runInAction(() => {
-                this.religionList = res?.data || [];
-                this.loadingInitial = false;
-            });
-        } catch (error) {
-            toast.warning("Failed to load religions.");
+            toast.warning("Failed to load staff.");
             this.loadingInitial = false;
         }
     };
 
     setShouldOpenConfirmationDialog = (state) => {
         this.shouldOpenConfirmationDialog = state;
-    };
+    }
 
     setShouldOpenEditorDialog = (state) => {
+        console.log(this)
         this.shouldOpenEditorDialog = state;
-    };
+    }
 
-    handleClose = () => {
+
+    handleClose() {
         this.shouldOpenEditorDialog = false;
-        this.shouldOpenConfirmationDialog = false;
-    };
+    }
 
     updatePageData = (keyword) => {
-        if (keyword) {
+        if (keyword !== "" && keyword !== undefined && keyword !== null) {
             this.page = 1;
             this.keyword = keyword;
         }
         this.search();
     };
 
-    setSelectedReligion = (religion) => {
-        this.selectedReligion = religion;
+    setSelected = (value) => {
+        this.getById(value?.id);
     };
 
     setPage = (page) => {
@@ -115,59 +93,69 @@ export default class ReligionStore {
 
     handleConfirmDelete = async () => {
         try {
-            const res = await deleteReligion(this.selectedReligion.id);
+            const res = await deleteProject(this.selected.id);
             if (res?.data) {
-                this.handleClose();
+                this.shouldOpenConfirmationDialog = false
                 toast.success("Deleted successfully.");
-                this.search();
+                this.search()
             } else {
+                console.error(res?.data);
                 toast.warning("Deleted failure.");
             }
         } catch (error) {
+            console.log(error);
             toast.error("An error occurred. Please try again later.");
         }
     };
 
-    getReligion = async (id) => {
+    getById = async (id) => {
         if (id != null) {
             try {
-                const data = await getReligion(id);
-                this.setSelectedReligion(data?.data);
+                const data = await getProject(id);
+                this.selected = data?.data;
             } catch (error) {
                 console.log(error);
             }
         } else {
-            this.setSelectedReligion(null);
+            this.handleSelect(null);
         }
     };
 
-    updateReligion = async (religion) => {
+    handleSelect = (value) => {
+        this.selected = value;
+    };
+
+    updateData = async (value) => {
         try {
-            const res = await editReligion(religion);
-            this.handleClose();
-            toast.success("Updated successfully!");
+            const res = await updateProject(value);
+            this.handleClose(true);
+            toast.success("Updated successfully!")
+            this.search()
             return res?.data;
         } catch (error) {
+            console.log(error);
             toast.warning("An error occurred while saving.");
         }
     };
 
-    saveReligion = async (religion) => {
+    saveData = async (value) => {
         try {
-            const res = await createReligion(religion);
-            this.handleClose();
+            const res = await saveProject(value);
+            this.handleClose(true);
             toast.success("Created successfully!");
+            this.search()
             return res?.data;
         } catch (error) {
+            console.log(error);
             toast.warning("An error occurred while saving.");
         }
     };
 
-    resetReligionStore = () => {
-        this.religionList = [];
+    resetStore = () => {
+        this.listData = [];
         this.totalElements = 0;
         this.totalPages = 0;
-        this.selectedReligion = null;
+        this.selected = null;
         this.page = 1;
         this.rowsPerPage = 10;
         this.keyword = "";

@@ -35,6 +35,6 @@ export const checkCode = (id, code) => {
 };
 
 export const getAllEthnicities = () => {
-  var url = API_PATH_2 + "/getAllEthnicities";
+  var url = API_PATH_2 + "/getAll";
   return axios.get(url);
 };
