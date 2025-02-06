@@ -4,7 +4,6 @@ import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import IconButton from "@material-ui/core/IconButton";
-import InputBase from "@material-ui/core/InputBase";
 import { makeStyles } from "@material-ui/core/styles";
 import AddIcon from "@material-ui/icons/Add";
 import SearchIcon from "@material-ui/icons/Search";
@@ -233,14 +232,9 @@ export default observer(function DepartmentIndex() {
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
-          <DialogTitle id="alert-dialog-title">
-            {"Bạn có muốn xóa không?"}
-          </DialogTitle>
+          <DialogTitle id="alert-dialog-title">{"Bạn có muốn xóa không?"}</DialogTitle>
           <DialogActions>
-            <Button
-              onClick={() => setShouldOpenConfirmationDialog(false)}
-              color="primary"
-            >
+            <Button onClick={() => setShouldOpenConfirmationDialog(false)} color="primary">
               Hủy
             </Button>
             <Button onClick={handleConfirmDelete} color="primary" autoFocus>

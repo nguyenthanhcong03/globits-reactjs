@@ -1,19 +1,18 @@
-import "../styles/_app.scss";
-import React from "react";
+import history from "history.js";
 import { Provider } from "react-redux";
 import { Router } from "react-router-dom";
+import "../styles/_app.scss";
 import EgretTheme from "./EgretLayout/EgretTheme/EgretTheme";
 import AppContext from "./appContext";
-import history from "history.js";
 
-import routes from "./RootRoutes";
-import { Store } from "./redux/Store";
-import Auth from "./auth/Auth";
-import EgretLayout from "./EgretLayout/EgretLayout";
-import AuthGuard from "./auth/AuthGuard";
-import "../styles/nprogress.css";
 import { loadProgressBar } from "axios-progress-bar";
 import { observer } from "mobx-react";
+import "../styles/nprogress.css";
+import EgretLayout from "./EgretLayout/EgretLayout";
+import routes from "./RootRoutes";
+import Auth from "./auth/Auth";
+import AuthGuard from "./auth/AuthGuard";
+import { Store } from "./redux/Store";
 
 loadProgressBar();
 const App = () => {

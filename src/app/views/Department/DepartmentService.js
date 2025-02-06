@@ -18,7 +18,7 @@ export const getDepartment = (id) => {
   return axios.get(url);
 };
 
-export const createDepartment= (obj) => {
+export const createDepartment = (obj) => {
   let url = API_PATH;
   return axios.post(url, obj);
 };
@@ -33,7 +33,7 @@ export const deleteDepartment = (id) => {
   return axios.delete(url);
 };
 
-export const checkCode = (id,code) => {
+export const checkCode = (id, code) => {
   const param = { params: { id: id, code: code } };
   var url = API_PATH + "/checkCode";
   return axios.get(url, param);

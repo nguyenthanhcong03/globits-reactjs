@@ -1,14 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import {
-  createStaff,
-  updateStaff,
-  deleteStaffById,
-  getStaffById,
-  searchStaffByPage,
-  getAllStaffs,
-} from "./StaffService";
-import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { createStaff, deleteStaffById, getAllStaffs, searchStaffByPage, updateStaff } from "./StaffService";
 
 export default class StaffStore {
   staffList = [];

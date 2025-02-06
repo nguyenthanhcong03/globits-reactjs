@@ -1,16 +1,12 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import {
-  pagingDepartments,
-  pagingAllDepartments,
-  getDepartment,
-  createDepartment,
-  editDepartment,
-  deleteDepartment,
-  checkCode,
-  getListDepartment,
-  getTreeView,
-} from "../Department/DepartmentService";
 import { toast } from "react-toastify";
+import {
+  createDepartment,
+  deleteDepartment,
+  editDepartment,
+  getDepartment,
+  pagingDepartments,
+} from "../Department/DepartmentService";
 
 export default class DepartmentStore {
   departmentList = [];

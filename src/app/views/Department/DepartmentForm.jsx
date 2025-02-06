@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import { useFormik } from "formik";
-import * as Yup from "yup";
 import { FormControlLabel, Radio, TextField } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
-import TableCustom from "../../common/staff/TableCustom";
+import { makeStyles } from "@material-ui/core/styles";
+import { useFormik } from "formik";
 import { observer } from "mobx-react";
-import { useStore } from "../../stores";
+import { useEffect, useState } from "react";
+import * as Yup from "yup";
 import DatePickers from "../../common/staff/DatePickers";
+import TableCustom from "../../common/staff/TableCustom";
+import { useStore } from "../../stores";
 
 const useStyles = makeStyles((theme) => ({
   wapper: {
@@ -90,22 +90,13 @@ function DepartmentForm() {
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
-      name: Yup.string()
-        .min(2, "Ít nhất 2 ký tự")
-        .max(15, "Nhiều nhất 15 ký tự")
-        .required("Không được bỏ trống!"),
-      code: Yup.string()
-        .min(2, "Ít nhất 2 ký tự")
-        .max(15, "Nhiều nhất 15 ký tự")
-        .required("Không được bỏ trống!"),
+      name: Yup.string().min(2, "Ít nhất 2 ký tự").max(15, "Nhiều nhất 15 ký tự").required("Không được bỏ trống!"),
+      code: Yup.string().min(2, "Ít nhất 2 ký tự").max(15, "Nhiều nhất 15 ký tự").required("Không được bỏ trống!"),
       description: Yup.string()
         .min(5, "Ít nhất 5 ký tự")
         .max(500, "Nhiều nhất 500 ký tự")
         .required("Không được bỏ trống!"),
-      func: Yup.string()
-        .min(2, "Ít nhất 2 ký tự")
-        .max(50, "Nhiều nhất 50 ký tự")
-        .required("Không được bỏ trống!"),
+      func: Yup.string().min(2, "Ít nhất 2 ký tự").max(50, "Nhiều nhất 50 ký tự").required("Không được bỏ trống!"),
       industryBlock: Yup.string()
         .min(2, "Ít nhất 2 ký tự")
         .max(100, "Nhiều nhất 100 ký tự")
@@ -144,14 +135,7 @@ function DepartmentForm() {
           onClick={() => {
             setParent(rowData);
           }}
-          control={
-            <Radio
-              checked={
-                parent?.id === rowData?.id ||
-                selectedDepartment?.parent?.id === rowData?.id
-              }
-            />
-          }
+          control={<Radio checked={parent?.id === rowData?.id || selectedDepartment?.parent?.id === rowData?.id} />}
         />
       ),
       sorting: false,
@@ -159,8 +143,7 @@ function DepartmentForm() {
     },
     {
       title: "Phòng ban trực thuộc",
-      render: (rowData) =>
-        rowData?.parent?.name ? rowData?.parent?.name : "Không có",
+      render: (rowData) => (rowData?.parent?.name ? rowData?.parent?.name : "Không có"),
     },
     { title: "Tên phòng ban", field: "name" },
     { title: "Mã phòng ban", field: "code" },
@@ -183,9 +166,7 @@ function DepartmentForm() {
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle id="alert-dialog-title">
-          {selectedDepartment?.id
-            ? "Chỉnh sửa phòng ban"
-            : "Thêm mới phòng ban"}
+          {selectedDepartment?.id ? "Chỉnh sửa phòng ban" : "Thêm mới phòng ban"}
         </DialogTitle>
         <DialogContent>
           <div className={classes.parent}>
@@ -195,11 +176,7 @@ function DepartmentForm() {
               variant="outlined"
               color="secondary"
               disabled
-              value={
-                selectedDepartment?.parent?.name
-                  ? selectedDepartment.name
-                  : parent?.name || ""
-              }
+              value={selectedDepartment?.parent?.name ? selectedDepartment.name : parent?.name || ""}
               InputProps={{
                 shrink: true,
                 readOnly: true,
@@ -251,13 +228,8 @@ function DepartmentForm() {
                 value={formik.values.description}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.description &&
-                  Boolean(formik.errors.description)
-                }
-                helperText={
-                  formik.touched.description && formik.errors.description
-                }
+                error={formik.touched.description && Boolean(formik.errors.description)}
+                helperText={formik.touched.description && formik.errors.description}
               />
 
               <TextField
@@ -282,13 +254,8 @@ function DepartmentForm() {
                 value={formik.values.industryBlock}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.industryBlock &&
-                  Boolean(formik.errors.industryBlock)
-                }
-                helperText={
-                  formik.touched.industryBlock && formik.errors.industryBlock
-                }
+                error={formik.touched.industryBlock && Boolean(formik.errors.industryBlock)}
+                helperText={formik.touched.industryBlock && formik.errors.industryBlock}
               />
               <TextField
                 className={classes.itemInput}
@@ -300,21 +267,12 @@ function DepartmentForm() {
                 value={formik.values.foundedNumber}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.foundedNumber &&
-                  Boolean(formik.errors.foundedNumber)
-                }
-                helperText={
-                  formik.touched.foundedNumber && formik.errors.foundedNumber
-                }
+                error={formik.touched.foundedNumber && Boolean(formik.errors.foundedNumber)}
+                helperText={formik.touched.foundedNumber && formik.errors.foundedNumber}
               />
               <DatePickers
                 labelDate="Ngày thành lập"
-                value={
-                  formik.values.foundedDate
-                    ? formik.values.foundedDate
-                    : new Date()
-                }
+                value={formik.values.foundedDate ? formik.values.foundedDate : new Date()}
                 onChange={(date) => formik.setFieldValue("foundedDate", date)}
                 isTime={false}
                 className={classes.itemInput}
@@ -329,21 +287,12 @@ function DepartmentForm() {
                 value={formik.values.displayOrder}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.displayOrder &&
-                  Boolean(formik.errors.displayOrder)
-                }
-                helperText={
-                  formik.touched.displayOrder && formik.errors.displayOrder
-                }
+                error={formik.touched.displayOrder && Boolean(formik.errors.displayOrder)}
+                helperText={formik.touched.displayOrder && formik.errors.displayOrder}
               />
             </div>
             <div className={classes.buttonWrapper}>
-              <Button
-                variant="contained"
-                color="inherit"
-                onClick={() => setShouldOpenEditorDialog(false)}
-              >
+              <Button variant="contained" color="inherit" onClick={() => setShouldOpenEditorDialog(false)}>
                 Hủy
               </Button>
               <Button type="submit" variant="contained" color="primary">

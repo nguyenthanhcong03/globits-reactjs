@@ -1,27 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
-import AddIcon from "@material-ui/icons/Add";
-import EditIcon from "@material-ui/icons/Edit";
-import DeleteIcon from "@material-ui/icons/Delete";
-import SearchIcon from "@material-ui/icons/Search";
-import InputBase from "@material-ui/core/InputBase";
-import { observer } from "mobx-react";
-import { useStore } from "../../stores";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogTitle from "@material-ui/core/DialogTitle";
+import { makeStyles } from "@material-ui/core/styles";
+import AddIcon from "@material-ui/icons/Add";
+import DeleteIcon from "@material-ui/icons/Delete";
+import EditIcon from "@material-ui/icons/Edit";
+import SearchIcon from "@material-ui/icons/Search";
+import { observer } from "mobx-react";
+import { useEffect, useRef } from "react";
+import { useStore } from "../../stores";
 // import TableCustom from "../../common/staff/TableCustom";
-import IconButton from "@material-ui/core/IconButton";
-import { Icon, TextField } from "@material-ui/core";
-import DepartmentForm from "../Department/DepartmentForm";
-import StaffForm from "./StaffForm";
-import MenuItem from "@material-ui/core/MenuItem";
-import GlobitsTable from "app/common/GlobitsTable";
-import MaterialTable from "material-table";
+import { TextField } from "@material-ui/core";
 import useDebounce from "app/hooks/useDebounce";
-import { getAllStaffs } from "./StaffService";
-import { de } from "date-fns/locale";
+import MaterialTable from "material-table";
+import StaffForm from "./StaffForm";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -89,28 +82,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const MaterialButton = ({ item, setSelectedStaff, onEdit, onDelete }) => (
-  <>
-    <IconButton
-      onClick={() => {
-        onEdit(true);
-        setSelectedStaff(item);
-      }}
-      aria-label="edit"
-    >
-      <Icon color="primary">edit</Icon>
-    </IconButton>
-    <IconButton
-      onClick={() => {
-        onDelete(true);
-        setSelectedStaff(item);
-      }}
-      aria-label="delete"
-    >
-      <Icon color="error">delete</Icon>
-    </IconButton>
-  </>
-);
 export default observer(function StaffIndex() {
   const classes = useStyles();
   const { staffStore } = useStore();
@@ -133,9 +104,6 @@ export default observer(function StaffIndex() {
     pageIndex,
     handleChangePage,
     handleChangeRowsPerPage,
-    shouldOpenConfirmationDialog,
-    handleConfirmDelete,
-    shouldOpenEditorDialog,
   } = staffStore;
 
   const debounce = useDebounce(keyword, 300);
@@ -283,16 +251,6 @@ export default observer(function StaffIndex() {
         </div>
       </div>
       <div className={classes.tableContainer}>
-        {/* <TableCustom
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          totalPages={totalPages}
-          page={pageIndex}
-          handleChangePage={}
-          title={"Danh sách nhân viên"}
-          datas={staffList}
-          columns={columns}
-        /> */}
         <MaterialTable
           title={"Danh sách nhân viên"}
           data={staffList}
@@ -337,18 +295,12 @@ export default observer(function StaffIndex() {
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
-          <DialogTitle id="alert-dialog-title">
-            {"Bạn có muốn xóa không?"}
-          </DialogTitle>
+          <DialogTitle id="alert-dialog-title">{"Bạn có muốn xóa không?"}</DialogTitle>
           <DialogActions>
             <Button onClick={() => setIsOpenPopup(false)} color="primary">
               Hủy
             </Button>
-            <Button
-              onClick={() => deleteStaff(selectedStaff.id)}
-              color="primary"
-              autoFocus
-            >
+            <Button onClick={() => deleteStaff(selectedStaff.id)} color="primary" autoFocus>
               Có
             </Button>
           </DialogActions>

@@ -1,33 +1,31 @@
-import React, { useEffect, useState } from "react";
 import AddIcon from "@material-ui/icons/Add";
-import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
+import EditIcon from "@material-ui/icons/Edit";
+import { useEffect, useState } from "react";
 
 import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Icon,
+  makeStyles,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
-  Button,
-  makeStyles,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions,
   TablePagination,
-  Icon,
+  TableRow,
+  TextField,
 } from "@material-ui/core";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { v4 as uuidv4 } from "uuid";
-import { set } from "lodash";
 import useDebounce from "app/hooks/useDebounce";
-import { observer } from "mobx-react";
 import { useStore } from "app/stores";
+import { useFormik } from "formik";
+import { observer } from "mobx-react";
+import * as Yup from "yup";
 
 const useStyles = makeStyles({
   container: {
@@ -163,10 +161,7 @@ export default observer(function CountryIndex() {
                       />
                     </Icon>
                     <Icon>
-                      <DeleteIcon
-                        color="error"
-                        onClick={() => removeCountry(country.id)}
-                      />
+                      <DeleteIcon color="error" onClick={() => removeCountry(country.id)} />
                     </Icon>
                   </TableCell>
                 </TableRow>
@@ -188,9 +183,7 @@ export default observer(function CountryIndex() {
       {/* Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <form onSubmit={formik.handleSubmit}>
-          <DialogTitle>
-            {selectedCountry ? "Chỉnh sửa quốc gia" : "Thêm mới quốc gia"}
-          </DialogTitle>
+          <DialogTitle>{selectedCountry ? "Chỉnh sửa quốc gia" : "Thêm mới quốc gia"}</DialogTitle>
           <DialogContent>
             <TextField
               label="Tên quốc gia"
