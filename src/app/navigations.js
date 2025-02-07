@@ -36,6 +36,12 @@ export const navigations = [
         icon: "remove",
         isVisible: true,
       },
+      {
+        name: "Time sheet",
+        path: ConstantList.ROOT_PATH + "category/time-sheet",
+        icon: "remove",
+        isVisible: true,
+      },
     ],
   },
 ];
