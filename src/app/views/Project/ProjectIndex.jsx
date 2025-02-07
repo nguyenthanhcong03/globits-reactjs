@@ -11,8 +11,13 @@ import DialogActions from "@material-ui/core/DialogActions";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import TableCustom from "../../common/staff/TableCustom";
 import IconButton from "@material-ui/core/IconButton";
-import { Icon } from "@material-ui/core";
+import { Icon, TextField } from "@material-ui/core";
 import ProjectForm from "./ProjectForm";
+import useDebounce from "app/hooks/useDebounce";
+import AddIcon from "@material-ui/icons/Add";
+import EditIcon from "@material-ui/icons/Edit";
+import DeleteIcon from "@material-ui/icons/Delete";
+import MaterialTable from "material-table";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -50,25 +55,24 @@ const useStyles = makeStyles((theme) => ({
     height: "100vh",
     zIndex: 1300,
   },
-  search: {
+  searchWrapper: {
     position: "relative",
-    borderRadius: theme.shape.borderRadius,
-    border: "1px solid gray",
-    width: "200px",
     display: "flex",
+    borderRadius: theme.shape.borderRadius,
+    width: "500px",
     alignItems: "center",
-    justifyContent: "between",
+    justifyContent: "space-between",
   },
   searchIcon: {
     display: "flex",
     alignItems: "center",
     height: "100%",
     padding: theme.spacing(0, 1),
-    backgroundColor: "#01c0c8",
+    backgroundColor: "#7467EF",
     borderTopRightRadius: theme.shape.borderRadius,
     borderBottomRightRadius: theme.shape.borderRadius,
   },
-  inputInput: {
+  searchInput: {
     paddingLeft: "10px",
   },
   nav: {
@@ -76,67 +80,40 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     marginBottom: theme.spacing(2),
   },
+  tableContainer: {
+    overflowY: "auto", // Enables vertical scrolling
+  },
 }));
 
-const MaterialButton = ({ item, setSelected, onEdit, onDelete }) => (
-  <>
-    <IconButton
-      onClick={() => {
-        onEdit(true);
-        setSelected(item);
-      }}
-      aria-label="edit"
-    >
-      <Icon color="primary">edit</Icon>
-    </IconButton>
-    <IconButton
-      onClick={() => {
-        onDelete(true);
-        setSelected(item);
-      }}
-      aria-label="delete"
-    >
-      <Icon color="error">delete</Icon>
-    </IconButton>
-  </>
-);
-export default observer(function StaffIndex() {
+export default observer(function ProjectIndex() {
+  const classes = useStyles();
   const { projectStore } = useStore();
   const {
-    search,
-    updatePageData,
-    setKeyword,
+    fetchProjects,
+    searchProjectsByPage,
     keyword,
-    setShouldOpenEditorDialog,
-    setSelected,
-    listData,
-    setShouldOpenConfirmationDialog,
-    rowsPerPage,
-    setRowsPerPage,
+    setKeyword,
+    selectedProject,
+    setSelectedProject,
+    projectList,
+    deleteProject,
+    pageSize,
+    setIsOpenForm,
+    isOpenForm,
+    isOpenPopup,
+    setIsOpenPopup,
+    setPageSize,
     totalPages,
-    page,
+    pageIndex,
     handleChangePage,
-    shouldOpenConfirmationDialog,
-    handleConfirmDelete,
-    shouldOpenEditorDialog,
+    handleChangeRowsPerPage,
   } = projectStore;
 
+  const debounce = useDebounce(keyword, 300);
+
   useEffect(() => {
-    search();
-  }, [search]);
-
-  const classes = useStyles();
-
-  const handleIconClick = () => {
-    updatePageData(keyword);
-  };
-
-  const handleKeyDown = (e) => {
-    setKeyword(e.target.value);
-    if (e.key === "Enter") {
-      updatePageData(keyword);
-    }
-  };
+    fetchProjects();
+  }, [debounce]);
 
   const columns = [
     {
@@ -153,14 +130,28 @@ export default observer(function StaffIndex() {
     { title: "Tên dự án", field: "name" },
     { title: "Mô tả dự án", field: "description" },
     {
-      title: "Hành động",
+      title: "Thao tác",
       render: (rowData) => (
-        <MaterialButton
-          item={rowData}
-          onEdit={setShouldOpenEditorDialog}
-          onDelete={setShouldOpenConfirmationDialog}
-          setSelected={setSelected}
-        />
+        <div>
+          <div>
+            <EditIcon
+              color="primary"
+              onClick={() => {
+                setIsOpenForm(true);
+                setSelectedProject(rowData);
+              }}
+              cursor="pointer"
+            />
+            <DeleteIcon
+              color="error"
+              cursor="pointer"
+              onClick={() => {
+                setIsOpenPopup(true);
+                setSelectedProject(rowData);
+              }}
+            />
+          </div>
+        </div>
       ),
     },
   ];
@@ -174,64 +165,84 @@ export default observer(function StaffIndex() {
           disableElevation
           className={classes.button}
           onClick={() => {
-            setShouldOpenEditorDialog(true);
-            setSelected(null);
+            setIsOpenForm(true);
+            setSelectedProject(null);
           }}
         >
-          Thêm mới <AddCircleOutlineOutlinedIcon />
+          Thêm mới <AddIcon />
         </Button>
-        <div className={classes.search}>
-          <InputBase
-            placeholder="search…"
+        <div className={classes.searchWrapper}>
+          <TextField
+            variant="outlined"
+            fullWidth
+            size="small"
+            placeholder="Tìm kiếm dự án"
             classes={{
               root: classes.inputRoot,
-              input: classes.inputInput,
+              input: classes.searchInput,
             }}
-            onChange={(e) => handleKeyDown(e)}
-            onKeyPress={handleKeyDown}
+            onChange={(e) => setKeyword(e.target.value)}
+            value={keyword}
             inputProps={{ "aria-label": "search" }}
           />
-          <div className={classes.searchIcon} onClick={handleIconClick}>
+          <div className={classes.searchIcon}>
             <SearchIcon />
           </div>
         </div>
       </div>
       <div className={classes.tableContainer}>
-        <TableCustom
-          rowsPerPage={rowsPerPage}
-          setRowsPerPage={setRowsPerPage}
-          totalPages={totalPages}
-          page={page}
-          handleChangePage={handleChangePage}
+        <MaterialTable
           title={"Danh sách dự án"}
-          datas={listData}
+          data={projectList}
           columns={columns}
+          parentChildData={(row, rows) => {
+            var list = rows.find((a) => a.id === row.parentId);
+            return list;
+          }}
+          options={{
+            // selection: selection ? true : false,
+            actionsColumnIndex: -1,
+            paging: true,
+            pageSize: pageSize,
+            search: false,
+            toolbar: true,
+            maxBodyHeight: "300px",
+            headerStyle: {
+              backgroundColor: "#e3f2fd",
+              // color: "#fff",
+              position: "sticky",
+            },
+            // rowStyle: (rowData, index) => ({
+            //   backgroundColor: index % 2 === 1 ? "rgb(237, 245, 251)" : "#FFF",
+            // }),
+          }}
+          // onSelectionChange={(rows) => {
+          //   handleSelectList(rows);
+          // }}
+          // localization={{
+          //   body: {
+          //     emptyDataSourceMessage: `${t("general.emptyDataMessageTable")}`,
+          //   },
+          // }}
         />
       </div>
-      {shouldOpenEditorDialog && <ProjectForm />}
-      {shouldOpenConfirmationDialog && (
+
+      {isOpenForm && <ProjectForm />}
+
+      {isOpenPopup && (
         <Dialog
-          open={shouldOpenConfirmationDialog}
-          onClose={() => setShouldOpenConfirmationDialog(false)}
+          open={isOpenPopup}
+          onClose={() => setIsOpenPopup(false)}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
-          <DialogTitle id="alert-dialog-title">
-            {"Bạn có muốn xóa không?"}
-          </DialogTitle>
+          <DialogTitle id="alert-dialog-title">{"Bạn có muốn xóa không?"}</DialogTitle>
           <DialogActions>
-            <Button
-              onClick={() => setShouldOpenConfirmationDialog(false)}
-              color="primary"
-            >
+            <Button onClick={() => setIsOpenPopup(false)} color="primary">
               Hủy
             </Button>
-            <Button
-              onClick={() => handleConfirmDelete()}
-              color="primary"
-              autoFocus
-            >
-              Xác nhận
+            <Button onClick={() => deleteProject(selectedProject.id)} color="primary" autoFocus>
+              Có
             </Button>
           </DialogActions>
         </Dialog>

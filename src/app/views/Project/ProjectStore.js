@@ -1,166 +1,101 @@
-import {makeAutoObservable, runInAction} from "mobx";
-import {deleteProject, getProject, saveProject, searchProjectsByPage, updateProject} from "./ProjectService"
+import { makeAutoObservable, runInAction } from "mobx";
+import { createProject, deleteProject, searchProjectsByPage, updateProject } from "./ProjectService";
 import "react-toastify/dist/ReactToastify.css";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 export default class ProjectStore {
-    listData = [];
-    selected = null;
-    totalElements = 0;
-    totalPages = 0;
-    page = 1;
-    rowsPerPage = 10;
-    keyword = "";
-    loadingInitial = false;
-    shouldOpenEditorDialog = false;
-    shouldOpenConfirmationDialog = false;
+  projectList = [];
+  selectedProject = null;
+  totalElements = 0;
+  totalPages = 0;
+  pageIndex = 1;
+  pageSize = 10;
+  keyword = "";
+  isLoading = false;
+  isOpenForm = false;
+  isOpenPopup = false;
 
-    constructor() {
-        makeAutoObservable(this);
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  fetchProjects = async () => {
+    this.isLoading = true;
+
+    const searchObject = {
+      keyword: this.keyword,
+      pageIndex: this.page,
+      pageSize: this.pageSize,
+    };
+
+    try {
+      let res = await searchProjectsByPage(searchObject);
+      console.log("res", res);
+
+      runInAction(() => {
+        this.projectList = res?.data?.content || [];
+        this.totalElements = res?.data?.totalElements;
+        this.totalPages = res?.data?.totalPages;
+        this.isLoading = false;
+      });
+    } catch (error) {
+      toast.warning("Failed to load project.");
+      this.isLoading = false;
     }
-
-
-    setLoadingInitial = (state) => {
-        this.loadingInitial = state;
-    };
-
-    setKeyword = (value) => {
-        this.keyword = value;  // Cập nhật 'keyword' trong store
+  };
+  deleteProject = async (id) => {
+    try {
+      await deleteProject(id);
+      this.fetchProjects();
+    } catch (error) {
+      console.error("Error deleting project:", error);
     }
+    this.setIsOpenPopup(false);
+  };
 
-    search = async () => {
-        this.loadingInitial = true;
-
-        const searchObject = {
-            keyword: this.keyword, pageIndex: this.page, pageSize: this.rowsPerPage,
-        };
-
-        try {
-            let res = await searchProjectsByPage(searchObject);
-
-            runInAction(() => {
-                this.listData = res?.data?.content || [];
-                this.totalElements = res?.data?.totalElements;
-                this.totalPages = res?.data?.totalPages;
-                this.loadingInitial = false;
-            });
-        } catch (error) {
-            toast.warning("Failed to load staff.");
-            this.loadingInitial = false;
-        }
-    };
-
-    setShouldOpenConfirmationDialog = (state) => {
-        this.shouldOpenConfirmationDialog = state;
+  updateProject = async (value) => {
+    try {
+      await updateProject(value);
+      this.fetchProjects();
+    } catch (error) {
+      console.error("Error edit project:", error);
     }
+  };
 
-    setShouldOpenEditorDialog = (state) => {
-        console.log(this)
-        this.shouldOpenEditorDialog = state;
+  createProject = async (value) => {
+    try {
+      await createProject(value);
+      this.fetchProjects();
+    } catch (error) {
+      console.error("Failed to add project", error);
     }
+  };
 
+  setLoadingInitial = (state) => {
+    this.isLoading = state;
+  };
 
-    handleClose() {
-        this.shouldOpenEditorDialog = false;
-    }
+  setKeyword = (value) => {
+    this.keyword = value;
+  };
 
-    updatePageData = (keyword) => {
-        if (keyword !== "" && keyword !== undefined && keyword !== null) {
-            this.page = 1;
-            this.keyword = keyword;
-        }
-        this.search();
-    };
+  setIsOpenForm = (state) => {
+    this.isOpenForm = state;
+  };
 
-    setSelected = (value) => {
-        this.getById(value?.id);
-    };
+  setIsOpenPopup = (state) => {
+    this.isOpenPopup = state;
+  };
 
-    setPage = (page) => {
-        this.page = page;
-        this.updatePageData();
-    };
+  setSelectedProject = (value) => {
+    this.selectedProject = value;
+  };
 
-    setRowsPerPage = (event) => {
-        this.rowsPerPage = Number(event.target.value) || 10;
-        this.page = 1;
-        this.updatePageData();
-    };
+  setPageIndex = (newPage) => {
+    this.pageIndex = newPage;
+  };
 
-    handleChangePage = (event, newPage) => {
-        this.setPage(newPage);
-    };
-
-    handleConfirmDelete = async () => {
-        try {
-            const res = await deleteProject(this.selected.id);
-            if (res?.data) {
-                this.shouldOpenConfirmationDialog = false
-                toast.success("Deleted successfully.");
-                this.search()
-            } else {
-                console.error(res?.data);
-                toast.warning("Deleted failure.");
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error("An error occurred. Please try again later.");
-        }
-    };
-
-    getById = async (id) => {
-        if (id != null) {
-            try {
-                const data = await getProject(id);
-                this.selected = data?.data;
-            } catch (error) {
-                console.log(error);
-            }
-        } else {
-            this.handleSelect(null);
-        }
-    };
-
-    handleSelect = (value) => {
-        this.selected = value;
-    };
-
-    updateData = async (value) => {
-        try {
-            const res = await updateProject(value);
-            this.handleClose(true);
-            toast.success("Updated successfully!")
-            this.search()
-            return res?.data;
-        } catch (error) {
-            console.log(error);
-            toast.warning("An error occurred while saving.");
-        }
-    };
-
-    saveData = async (value) => {
-        try {
-            const res = await saveProject(value);
-            this.handleClose(true);
-            toast.success("Created successfully!");
-            this.search()
-            return res?.data;
-        } catch (error) {
-            console.log(error);
-            toast.warning("An error occurred while saving.");
-        }
-    };
-
-    resetStore = () => {
-        this.listData = [];
-        this.totalElements = 0;
-        this.totalPages = 0;
-        this.selected = null;
-        this.page = 1;
-        this.rowsPerPage = 10;
-        this.keyword = "";
-        this.loadingInitial = false;
-        this.shouldOpenEditorDialog = false;
-        this.shouldOpenConfirmationDialog = false;
-    };
+  setPageSize = (value) => {
+    this.pageSize = value;
+  };
 }

@@ -98,18 +98,17 @@ export default class StaffStore {
       this.fetchStaffs();
     } catch (error) {
       console.error("Error deleting staff:", error);
+      alert("Không thể xóa nhân viên.");
     }
+    this.setIsOpenPopup(false);
   };
 
   updateStaff = async (value) => {
     try {
-      const res = await updateStaff(value);
-      this.handleClose(true);
-      toast.success("Cập nhật thành công");
-      return res?.data;
+      await updateStaff(value);
+      this.fetchStaffs();
     } catch (error) {
       console.log(error);
-      toast.warning("Lỗi! Vui lòng thử lại");
     }
   };
 
