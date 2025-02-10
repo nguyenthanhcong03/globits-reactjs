@@ -1,184 +1,171 @@
-import {makeAutoObservable, runInAction} from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import {
-    getTimeSheetById,
-    getTimeSheetByWorkingDate,
-    deleteTimeSheetById,
-    deleteTimeSheets,
-    searchStaffByName,
-    findTimeSheetByStaff,
-    searchTimeSheetByDto,
-    getTimeSheetDetail,
-    confirmTimeSheets,
-    searchTimeSheetByPage,
-    saveTimeSheet,
-    updateTimeSheetStatus,
-    exportTimeSheetsToExcel
-} from "./TimeSheetService"
+  getTimeSheetById,
+  getTimeSheetByWorkingDate,
+  deleteTimeSheetById,
+  deleteTimeSheets,
+  searchStaffByName,
+  findTimeSheetByStaff,
+  searchTimeSheetByDto,
+  getTimeSheetDetail,
+  confirmTimeSheets,
+  searchTimeSheetByPage,
+  saveTimeSheet,
+  updateTimeSheetStatus,
+  exportTimeSheetsToExcel,
+} from "./TimeSheetService";
 import "react-toastify/dist/ReactToastify.css";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 export default class TimeSheetStore {
-    listData = [];
-    selected = null;
-    totalElements = 0;
-    totalPages = 0;
-    page = 1;
-    rowsPerPage = 10;
-    keyword = "";
-    projectId = "";
-    loadingInitial = false;
-    shouldOpenEditorDialog = false;
-    shouldOpenConfirmationDialog = false;
+  timeSheetList = [];
+  selectedTimeSheet = null;
+  totalElements = 0;
+  totalPages = 0;
+  pageIndex = 1;
+  pageSize = 10;
+  keyword = "";
+  projectId = "";
+  isLoading = false;
+  isOpenForm = false;
+  isOpenPopup = false;
 
-    constructor() {
-        makeAutoObservable(this);
-    }
+  constructor() {
+    makeAutoObservable(this);
+  }
 
+  setIsLoading = (state) => {
+    this.isLoading = state;
+  };
 
-    setLoadingInitial = (state) => {
-        this.loadingInitial = state;
+  setKeyword = (value) => {
+    this.keyword = value;
+  };
+  setProjectId = (value) => {
+    this.projectId = value;
+    this.search();
+  };
+
+  search = async () => {
+    this.isLoading = true;
+
+    const searchObject = {
+      keyword: this.keyword,
+      pageIndex: this.pageIndex,
+      pageSize: this.pageSize,
+      projectId: this.projectId,
     };
 
-    setKeyword = (value) => {
-        this.keyword = value;  // Cập nhật 'keyword' trong store
+    try {
+      let res = await searchTimeSheetByPage(searchObject);
+
+      runInAction(() => {
+        this.timeSheetList = res?.data?.content || [];
+        this.totalElements = res?.data?.totalElements;
+        this.totalPages = res?.data?.totalPages;
+        this.isLoading = false;
+      });
+    } catch (error) {
+      toast.warning("Failed to load staff.");
+      this.isLoading = false;
     }
-    setProjectId = (value) => {
-        this.projectId = value;  // Cập nhật 'keyword' trong store
+  };
+
+  setIsOpenPopup = (state) => {
+    this.isOpenPopup = state;
+  };
+
+  setIsOpenForm = (state) => {
+    console.log(this);
+    this.isOpenForm = state;
+  };
+
+  handleClose() {
+    this.isOpenForm = false;
+  }
+
+  setSelectedTimeSheet = (value) => {
+    this.selectedTimeSheet = value;
+  };
+
+  setPageIndex = (page) => {
+    this.pageIndex = page;
+  };
+  setPageSize = (event) => {
+    this.pageSize = Number(event.target.value) || 10;
+    this.pageIndex = 1;
+  };
+
+  handleChangePage = (event, newPage) => {
+    this.setPageIndex(newPage);
+  };
+
+  handleConfirmDelete = async () => {
+    try {
+      const res = await deleteTimeSheetById(this.selectedTimeSheet.id);
+      if (res?.data) {
+        this.isOpenPopup = false;
+        toast.success("Deleted successfully.");
         this.search();
+      } else {
+        console.error(res?.data);
+        toast.warning("Deleted failure.");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("An error occurred. Please try again later.");
     }
+  };
 
-    search = async () => {
-        this.loadingInitial = true;
-
-        const searchObject = {
-            keyword: this.keyword, pageIndex: this.page, pageSize: this.rowsPerPage, projectId: this.projectId
-        };
-
-        try {
-            let res = await searchTimeSheetByPage(searchObject);
-
-            runInAction(() => {
-                this.listData = res?.data?.content || [];
-                this.totalElements = res?.data?.totalElements;
-                this.totalPages = res?.data?.totalPages;
-                this.loadingInitial = false;
-            });
-        } catch (error) {
-            toast.warning("Failed to load staff.");
-            this.loadingInitial = false;
-        }
-    };
-
-    setShouldOpenConfirmationDialog = (state) => {
-        this.shouldOpenConfirmationDialog = state;
+  getById = async (id) => {
+    if (id != null) {
+      try {
+        const data = await getTimeSheetById(id);
+        this.selected = data?.data;
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      this.handleSelect(null);
     }
+  };
 
-    setShouldOpenEditorDialog = (state) => {
-        console.log(this)
-        this.shouldOpenEditorDialog = state;
+  updateData = async (value) => {
+    try {
+      const res = await saveTimeSheet(value);
+      this.handleClose(true);
+      toast.success("Updated successfully!");
+      this.search();
+      return res?.data;
+    } catch (error) {
+      console.log(error);
+      toast.warning("An error occurred while saving.");
     }
+  };
 
-
-    handleClose() {
-        this.shouldOpenEditorDialog = false;
+  saveData = async (value) => {
+    try {
+      const res = await saveTimeSheet(value);
+      this.handleClose(true);
+      toast.success("Created successfully!");
+      this.search();
+      return res?.data;
+    } catch (error) {
+      console.log(error);
+      toast.warning("An error occurred while saving.");
     }
+  };
 
-    updatePageData = (keyword) => {
-        if (keyword !== "" && keyword !== undefined && keyword !== null) {
-            this.page = 1;
-            this.keyword = keyword;
-        }
-        this.search();
-    };
-
-    setSelected = (value) => {
-        this.getById(value?.id);
-    };
-
-    setPage = (page) => {
-        this.page = page;
-        this.updatePageData();
-    };
-    setRowsPerPage = (event) => {
-        this.rowsPerPage = Number(event.target.value) || 10;
-        this.page = 1;
-        this.updatePageData();
-    };
-
-    handleChangePage = (event, newPage) => {
-        this.setPage(newPage);
-    };
-
-    handleConfirmDelete = async () => {
-        try {
-            const res = await deleteTimeSheetById(this.selected.id);
-            if (res?.data) {
-                this.shouldOpenConfirmationDialog = false
-                toast.success("Deleted successfully.");
-                this.search()
-            } else {
-                console.error(res?.data);
-                toast.warning("Deleted failure.");
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error("An error occurred. Please try again later.");
-        }
-    };
-
-    getById = async (id) => {
-        if (id != null) {
-            try {
-                const data = await getTimeSheetById(id);
-                this.selected = data?.data;
-            } catch (error) {
-                console.log(error);
-            }
-        } else {
-            this.handleSelect(null);
-        }
-    };
-
-    handleSelect = (value) => {
-        this.selected = value;
-    };
-
-    updateData = async (value) => {
-        try {
-            const res = await saveTimeSheet(value);
-            this.handleClose(true);
-            toast.success("Updated successfully!")
-            this.search()
-            return res?.data;
-        } catch (error) {
-            console.log(error);
-            toast.warning("An error occurred while saving.");
-        }
-    };
-
-    saveData = async (value) => {
-        try {
-            const res = await saveTimeSheet(value);
-            this.handleClose(true);
-            toast.success("Created successfully!");
-            this.search()
-            return res?.data;
-        } catch (error) {
-            console.log(error);
-            toast.warning("An error occurred while saving.");
-        }
-    };
-
-    resetStore = () => {
-        this.listData = [];
-        this.totalElements = 0;
-        this.totalPages = 0;
-        this.selected = null;
-        this.page = 1;
-        this.rowsPerPage = 10;
-        this.keyword = "";
-        this.loadingInitial = false;
-        this.shouldOpenEditorDialog = false;
-        this.shouldOpenConfirmationDialog = false;
-    };
+  resetStore = () => {
+    this.timeSheetList = [];
+    this.totalElements = 0;
+    this.totalPages = 0;
+    this.selectedTimeSheet = null;
+    this.pageIndex = 1;
+    this.pageSize = 10;
+    this.keyword = "";
+    this.isLoading = false;
+    this.isOpenForm = false;
+    this.isOpenPopup = false;
+  };
 }

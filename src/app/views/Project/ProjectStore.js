@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { createProject, deleteProject, searchProjectsByPage, updateProject } from "./ProjectService";
+import { createProject, deleteProject, getProject, searchProjectsByPage, updateProject } from "./ProjectService";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
@@ -41,6 +41,19 @@ export default class ProjectStore {
     } catch (error) {
       toast.warning("Failed to load project.");
       this.isLoading = false;
+    }
+  };
+
+  getById = async (id) => {
+    if (id != null) {
+      try {
+        const data = await getProject(id);
+        this.selectedProject = data?.data;
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      this.setSelectedProject(null);
     }
   };
   deleteProject = async (id) => {

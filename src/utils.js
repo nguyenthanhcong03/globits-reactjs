@@ -2,11 +2,11 @@ import moment from "moment";
 
 export function debounce(func, wait, immediate) {
   var timeout;
-  return function() {
+  return function () {
     var context = this,
       args = arguments;
     clearTimeout(timeout);
-    timeout = setTimeout(function() {
+    timeout = setTimeout(function () {
       timeout = null;
       if (!immediate) func.apply(context, args);
     }, wait);
@@ -35,8 +35,7 @@ function currentYPosition() {
   // Firefox, Chrome, Opera, Safari
   if (window.pageYOffset) return window.pageYOffset;
   // Internet Explorer 6 - standards mode
-  if (document.documentElement && document.documentElement.scrollTop)
-    return document.documentElement.scrollTop;
+  if (document.documentElement && document.documentElement.scrollTop) return document.documentElement.scrollTop;
   // Internet Explorer 6, 7 and 8
   if (document.body.scrollTop) return document.body.scrollTop;
   return 0;
@@ -72,7 +71,7 @@ export function scrollTo(scrollableElement, elmID) {
   if (stopY > startY) {
     for (var i = startY; i < stopY; i += step) {
       setTimeout(
-        (function(leapY) {
+        (function (leapY) {
           return () => {
             scrollableElement.scrollTo(0, leapY);
           };
@@ -87,7 +86,7 @@ export function scrollTo(scrollableElement, elmID) {
   }
   for (let i = startY; i > stopY; i -= step) {
     setTimeout(
-      (function(leapY) {
+      (function (leapY) {
         return () => {
           scrollableElement.scrollTo(0, leapY);
         };
@@ -102,18 +101,13 @@ export function scrollTo(scrollableElement, elmID) {
 }
 
 export function getTimeDifference(date) {
-  let difference =
-    moment(new Date(), "DD/MM/YYYY HH:mm:ss").diff(
-      moment(date, "DD/MM/YYYY HH:mm:ss")
-    ) / 1000;
+  let difference = moment(new Date(), "DD/MM/YYYY HH:mm:ss").diff(moment(date, "DD/MM/YYYY HH:mm:ss")) / 1000;
 
   if (difference < 60) return `${Math.floor(difference)} seconds`;
   else if (difference < 3600) return `${Math.floor(difference / 60)} minutes`;
   else if (difference < 86400) return `${Math.floor(difference / 3660)} hours`;
-  else if (difference < 86400 * 30)
-    return `${Math.floor(difference / 86400)} days`;
-  else if (difference < 86400 * 30 * 12)
-    return `${Math.floor(difference / 86400 / 30)} months`;
+  else if (difference < 86400 * 30) return `${Math.floor(difference / 86400)} days`;
+  else if (difference < 86400 * 30 * 12) return `${Math.floor(difference / 86400 / 30)} months`;
   else return `${(difference / 86400 / 30 / 12).toFixed(1)} years`;
 }
 
@@ -125,11 +119,9 @@ export function generateRandomId() {
 
 export function getQueryParam(prop) {
   var params = {};
-  var search = decodeURIComponent(
-    window.location.href.slice(window.location.href.indexOf("?") + 1)
-  );
+  var search = decodeURIComponent(window.location.href.slice(window.location.href.indexOf("?") + 1));
   var definitions = search.split("&");
-  definitions.forEach(function(val, key) {
+  definitions.forEach(function (val, key) {
     var parts = val.split("=", 2);
     params[parts[0]] = parts[1];
   });
@@ -138,7 +130,25 @@ export function getQueryParam(prop) {
 
 export function classList(classes) {
   return Object.entries(classes)
-    .filter(entry => entry[1])
-    .map(entry => entry[0])
+    .filter((entry) => entry[1])
+    .map((entry) => entry[0])
     .join(" ");
 }
+
+export const formatDateTime = (timestamp, includeTime = true) => {
+  const date = new Date(timestamp);
+
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+
+  if (includeTime) {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  }
+
+  return `${day}/${month}/${year}`;
+};

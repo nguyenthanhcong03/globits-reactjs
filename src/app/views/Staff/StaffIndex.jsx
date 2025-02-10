@@ -15,6 +15,7 @@ import { TextField } from "@material-ui/core";
 import useDebounce from "app/hooks/useDebounce";
 import MaterialTable from "material-table";
 import StaffForm from "./StaffForm";
+import { formatDateTime } from "utils";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -118,24 +119,6 @@ export default observer(function StaffIndex() {
     // Cập nhật giá trị debounce trước đó
     prevDebounceRef.current = debounce;
   }, [debounce]);
-
-  const formatDateTime = (timestamp, includeTime = true) => {
-    const date = new Date(timestamp);
-
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-
-    if (includeTime) {
-      const hours = date.getHours().toString().padStart(2, "0");
-      const minutes = date.getMinutes().toString().padStart(2, "0");
-      const seconds = date.getSeconds().toString().padStart(2, "0");
-
-      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-    }
-
-    return `${day}/${month}/${year}`;
-  };
 
   const columns = [
     {
