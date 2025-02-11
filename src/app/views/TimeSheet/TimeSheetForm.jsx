@@ -32,8 +32,6 @@ import { observer } from "mobx-react";
 import DatePickers from "../../common/staff/DatePickers";
 import { useStore } from "../../stores";
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
 const useStyles = makeStyles((theme) => ({
   wrapper: {
     display: "flex",
@@ -43,14 +41,13 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     position: "relative",
   },
-  itemInput: {
-    width: "45%",
-  },
-  wrapperButton: {
+  buttonWrapper: {
+    width: "100%",
     display: "flex",
-    justifyContent: "center",
+    justifyContent: "end",
     gap: 10,
-    marginTop: 10,
+    marginTop: 50,
+    marginBottom: 20,
   },
   addFamilyMemberBtn: {
     position: "absolute",
@@ -133,8 +130,8 @@ export default observer(function TimeSheetForm() {
     }
   };
 
-  const [staffProject, setStaffProject] = useState([]);
-  const [staffSelecteds, setStaffSelecteds] = useState([]);
+  const [staffProject, setStaffProject] = useState(selectedTimeSheet?.timeSheetStaff || []);
+  const [staffSelecteds, setStaffSelecteds] = useState(staffProject || []);
 
   useEffect(() => {
     console.log(selectedTimeSheet);
@@ -187,7 +184,7 @@ export default observer(function TimeSheetForm() {
                   </Select>
                 </FormControl>
                 <TextField
-                  className={classes.itemInput}
+                  fullWidth
                   label="Mô tả"
                   variant="outlined"
                   name="description"
@@ -198,47 +195,52 @@ export default observer(function TimeSheetForm() {
                   helperText={touched.description && errors.description}
                 />
                 <DatePickers
-                  labelDate="Ngày làm việc"
+                  label="Ngày làm việc"
                   value={values.workingDate}
                   onChange={(date) => {
                     setFieldValue("workingDate", date);
                   }}
                   isTime={false}
-                  className={classes.itemInput}
                 />
                 <DatePickers
-                  labelDate="Thời gian bắt đầu"
+                  label="Thời gian bắt đầu"
                   value={values.startTime}
                   onChange={(date) => {
                     setFieldValue("startTime", date);
                   }}
+                  // isTime={false}
+                  ampm={true}
                   isTime={true}
-                  format={"MM/dd/yyyy hh:mm"}
-                  className={classes.itemInput}
+                  // format={"MM/dd/yyyy hh:mm"}
                 />
                 <DatePickers
-                  labelDate="Thời gian kết thúc"
+                  label="Thời gian kết thúc"
                   value={values.endTime}
                   onChange={(date) => {
                     setFieldValue("endTime", date);
                   }}
+                  ampm={true}
                   isTime={true}
                   format={"MM/dd/yyyy hh:mm"}
-                  className={classes.itemInput}
                 />
 
                 <Autocomplete
+                  fullWidth
                   multiple
                   options={Array.isArray(staffProject) ? staffProject : []}
                   disableCloseOnSelect
                   getOptionLabel={(option) => (option ? `${option.lastName || ""} ${option.firstName || ""}` : "")}
                   renderOption={(option, { selected }) => (
                     <React.Fragment>
-                      <Checkbox icon={icon} checkedIcon={checkedIcon} style={{ marginRight: 8 }} checked={selected} />
+                      <Checkbox
+                        icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                        checkedIcon={<CheckBoxIcon fontSize="small" />}
+                        style={{ marginRight: 8 }}
+                        checked={selected}
+                      />
                       {`${option?.lastName || ""} ${option?.firstName || ""}`}
                     </React.Fragment>
                   )}
-                  className={classes.itemInput}
                   value={values.timeSheetStaff || []}
                   onChange={(event, newValue) => {
                     // const staff = newValue.map((staff) => ({
@@ -255,28 +257,7 @@ export default observer(function TimeSheetForm() {
                   )}
                 />
 
-                {/* <Autocomplete
-                  multiple
-                  options={staffProject ? staffProject : []}
-                  value={values.timeSheetStaff}
-                  // disableCloseOnSelect
-                  getOptionLabel={(option) => `${option?.firstName || ""} ${option?.lastName || ""}`}
-                  renderOption={(option, { selected }) => (
-                    <>
-                      <Checkbox icon={icon} checkedIcon={checkedIcon} style={{ marginRight: 8 }} checked={selected} />
-                      {`${option?.firstName || ""} ${option?.lastName || ""}`}
-                    </>
-                  )}
-                  onChange={(event, newValue) => {
-                    setFieldValue("timeSheetStaff", newValue);
-                  }}
-                  renderInput={(params) => (
-                    <TextField {...params} variant="outlined" label="Chọn nhân viên vào dự án" />
-                  )}
-                  disabled={!values.project}
-                /> */}
-
-                <FormControl className={classes.itemInput} variant="outlined">
+                <FormControl fullWidth variant="outlined">
                   <InputLabel id="priority-select-label">Độ ưu tiên</InputLabel>
                   <Select
                     labelId="priority-select-label"
@@ -327,28 +308,25 @@ export default observer(function TimeSheetForm() {
                                 <TableRow key={index}>
                                   <TableCell>
                                     <TextField
-                                      name={`details.${index}.workingItemTitle`}
-                                      // name={`details[${index}].workingItemTitle`}
+                                      name={`details[${index}].workingItemTitle`}
                                       placeholder="Tiêu đề"
                                       value={item.workingItemTitle}
                                       onChange={handleChange}
                                     />
                                   </TableCell>
-
                                   <TableCell>
                                     <FormControl fullWidth>
                                       <InputLabel id={`relationship-select-label-${index}`}>Nhân viên</InputLabel>
                                       <Select
                                         labelId={`relationship-select-label-${index}`}
                                         id={`relationship-select-${index}`}
-                                        name={`details.${index}.employee`}
+                                        name={`details[${index}].employee`}
                                         value={item.employee?.id || ""}
-                                        // value={`item.details.${index}.employee.id`}
                                         onChange={(event) => {
                                           const selected = staffProject.find((item) => item.id === event.target.value);
                                           handleChange({
                                             target: {
-                                              name: `details.${index}.employee`,
+                                              name: `details[${index}].employee`,
                                               value: selected,
                                             },
                                           });
@@ -363,7 +341,6 @@ export default observer(function TimeSheetForm() {
                                       </Select>
                                     </FormControl>
                                   </TableCell>
-
                                   <TableCell>
                                     <IconButton onClick={() => remove(index)}>
                                       <DeleteIcon color="error" />
@@ -383,17 +360,11 @@ export default observer(function TimeSheetForm() {
                   )}
                 </FieldArray>
               </div>
-              <div className={classes.wrapperButton}>
-                <Button
-                  variant="contained"
-                  color="inherit"
-                  onClick={() => {
-                    setIsOpenForm(false);
-                  }}
-                >
+              <div className={classes.buttonWrapper}>
+                <Button variant="contained" color="inherit" onClick={() => setIsOpenForm(false)}>
                   Hủy
                 </Button>
-                <Button type="submit" variant="contained" color="inherit">
+                <Button type="submit" variant="contained" color="primary">
                   {selectedTimeSheet?.id ? "Cập nhật" : "Lưu"}
                 </Button>
               </div>

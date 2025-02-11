@@ -121,7 +121,7 @@ export default observer(function ProjectForm() {
                   renderOption={(option, { selected }) => (
                     <>
                       <Checkbox icon={icon} checkedIcon={checkedIcon} style={{ marginRight: 8 }} checked={selected} />
-                      {`${option?.firstName || ""} ${option?.lastName || ""}`}
+                      {`${option?.lastName || ""} ${option?.firstName || ""}`}
                     </>
                   )}
                   value={values.projectStaff}
