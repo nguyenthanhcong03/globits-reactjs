@@ -121,8 +121,6 @@ export default observer(function TimeSheetIndex() {
     pageSize,
     setPageSize,
     totalPages,
-    keyword,
-    setKeyword,
     pageIndex,
     handleChangePage,
     isOpenPopup,
@@ -130,13 +128,14 @@ export default observer(function TimeSheetIndex() {
     isOpenForm,
     setProjectId,
   } = timeSheetStore;
-  const [selectedProject, setSelectProject] = useState(null);
-  const debounceProject = useDebounce(projectStore.keyword, 300);
-  const debounceTimeSheet = useDebounce(keyword, 300);
+
+  const { fetchProjects, projectList, selectedProject, setSelectedProject, keyword, setKeyword } = projectStore;
+
+  const debounce = useDebounce(keyword, 300);
 
   useEffect(() => {
-    search();
-  }, []);
+    fetchProjects();
+  }, [debounce]);
 
   const columns = [
     {
@@ -260,14 +259,21 @@ export default observer(function TimeSheetIndex() {
   return (
     <div className={classes.root}>
       <div className={classes.container}>
-        {/* <div className={classes.sidebar}>
+        <div className={classes.sidebar}>
           <p className={classes.title}>Danh sách dự án:</p>
           <div className={classes.contentSidebar}>
             <Button
+              style={{
+                backgroundColor: selectedProject === null ? "#FB9678" : "transparent",
+                color: selectedProject === null ? "#fff" : "#FB9678",
+                borderRadius: "5px",
+                transition: "background-color 0.3s",
+              }}
               fullWidth
               color="secondary"
               onClick={() => {
                 setProjectId("");
+                setSelectedProject(null);
               }}
             >
               Tất cả
@@ -277,21 +283,19 @@ export default observer(function TimeSheetIndex() {
                 variant="outlined"
                 fullWidth
                 size="small"
-                placeholder="Tìm kiếm"
-                classes={{
-                  root: classes.inputRoot,
-                  input: classes.searchInput,
+                placeholder="Tìm kiếm dự án"
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value);
                 }}
-                onChange={(e) => projectStore.setKeyword(e.target.value)}
-                value={projectStore.keyword}
-                inputProps={{ "aria-label": "search" }}
               />
             </div>
-            <div className="">
-              {projectStore.projectList?.length > 0 ? (
-                <FixedSizeList height={300} width="100%" itemSize={40} itemCount={projectStore.projectList.length}>
+            <div>
+              {projectList?.length > 0 ? (
+                <FixedSizeList height={300} width="100%" itemSize={40} itemCount={projectList.length}>
                   {({ index, style }) => {
-                    const project = projectStore.projectList[index];
+                    const project = projectList[index];
+
                     return (
                       <ListItem
                         button
@@ -304,12 +308,11 @@ export default observer(function TimeSheetIndex() {
                           transition: "background-color 0.3s",
                         }}
                         onClick={() => {
-                          setSelectProject(project);
+                          setSelectedProject(project);
                           setProjectId(project?.id);
-                          projectStore.setSelectedProject(project);
                         }}
                       >
-                        <ListItemText primary={project.name} />
+                        <ListItemText style={{ textAlign: "center" }} primary={project.name} />
                       </ListItem>
                     );
                   }}
@@ -319,58 +322,7 @@ export default observer(function TimeSheetIndex() {
               )}
             </div>
           </div>
-        </div> */}
-        <TimeSheetSidebar />
-        {/* <div className={classes.content}>
-          <Button
-            variant="contained"
-            color="primary"
-            disableElevation
-            className={classes.button}
-            onClick={() => {
-              setIsOpenForm(true);
-              setSelectedTimeSheet(null);
-            }}
-          >
-            Thêm mới <AddIcon />
-          </Button>
-          <MaterialTable
-            title={"Bảng thời gian"}
-            data={timeSheetList}
-            columns={columns}
-            parentChildData={(row, rows) => {
-              var list = rows.find((a) => a.id === row.parentId);
-              return list;
-            }}
-            options={{
-              // selection: selection ? true : false,
-              actionsColumnIndex: -1,
-              draggable: false,
-              paging: true,
-              pageSize: pageSize,
-              search: false,
-              toolbar: true,
-              maxBodyHeight: "300px",
-              headerStyle: {
-                paddingLeft: "5px",
-                backgroundColor: "#01C0C8",
-                color: "#fff",
-                position: "sticky",
-              },
-              // rowStyle: (rowData, index) => ({
-              //   backgroundColor: index % 2 === 1 ? "rgb(237, 245, 251)" : "#FFF",
-              // }),
-            }}
-            // onSelectionChange={(rows) => {
-            //   handleSelectList(rows);
-            // }}
-            // localization={{
-            //   body: {
-            //     emptyDataSourceMessage: `${t("general.emptyDataMessageTable")}`,
-            //   },
-            // }}
-          />
-        </div> */}
+        </div>
         <TimeSheetTable />
       </div>
       {isOpenForm && <TimeSheetForm />}

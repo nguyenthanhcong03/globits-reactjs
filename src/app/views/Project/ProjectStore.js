@@ -24,16 +24,18 @@ export default class ProjectStore {
 
     const searchObject = {
       keyword: this.keyword,
-      pageIndex: this.page,
+      pageIndex: this.pageIndex,
       pageSize: this.pageSize,
     };
 
     try {
       let res = await searchProjectsByPage(searchObject);
-      console.log("res", res);
+      console.log(res);
 
       runInAction(() => {
+        // Chỉ cập nhật dữ liệu nếu keyword chưa thay đổi
         this.projectList = res?.data?.content || [];
+        console.log(this.projectList);
         this.totalElements = res?.data?.totalElements;
         this.totalPages = res?.data?.totalPages;
         this.isLoading = false;

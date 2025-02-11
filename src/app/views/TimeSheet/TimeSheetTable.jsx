@@ -43,6 +43,12 @@ const useStyles = makeStyles((theme) => ({
     borderTopRightRadius: theme.shape.borderRadius,
     borderBottomRightRadius: theme.shape.borderRadius,
   },
+  priority: {
+    backgroundColor: "#DC5B44",
+    padding: "5px 10px",
+    color: "#ffffff",
+    borderRadius: theme.shape.borderRadius,
+  },
 }));
 function TimeSheetTable() {
   const classes = useStyles();

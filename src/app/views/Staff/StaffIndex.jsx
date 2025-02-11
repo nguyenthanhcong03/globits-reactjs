@@ -99,11 +99,6 @@ export default observer(function StaffIndex() {
     isOpenForm,
     isOpenPopup,
     setIsOpenPopup,
-    setPageSize,
-    totalPages,
-    pageIndex,
-    handleChangePage,
-    handleChangeRowsPerPage,
   } = staffStore;
 
   const debounce = useDebounce(keyword, 300);
@@ -220,10 +215,6 @@ export default observer(function StaffIndex() {
             fullWidth
             size="small"
             placeholder="Tìm kiếm nhân viên"
-            classes={{
-              root: classes.inputRoot,
-              input: classes.searchInput,
-            }}
             onChange={(e) => setKeyword(e.target.value)}
             value={keyword}
             inputProps={{ "aria-label": "search" }}

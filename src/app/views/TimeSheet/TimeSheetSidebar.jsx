@@ -1,8 +1,8 @@
 import { Button, ListItem, ListItemText, makeStyles, TextField } from "@material-ui/core";
-import { useStore } from "../../stores";
-import React, { useEffect, useState } from "react";
-import { FixedSizeList } from "react-window";
 import useDebounce from "app/hooks/useDebounce";
+import { useEffect } from "react";
+import { FixedSizeList } from "react-window";
+import { useStore } from "../../stores";
 
 const useStyles = makeStyles((theme) => ({
   sidebar: {
@@ -35,25 +35,31 @@ function TimeSheetSidebar() {
   const classes = useStyles();
   const { projectStore, timeSheetStore } = useStore();
 
-  const { setProjectId, search } = timeSheetStore;
-  const { fetchProjects, projectList } = projectStore;
+  const { setProjectId } = timeSheetStore;
+  const { fetchProjects, projectList, selectedProject, setSelectedProject, keyword, setKeyword } = projectStore;
 
-  const [selectedProject, setSelectProject] = useState(null);
-  const debounceProject = useDebounce(projectStore.keyword, 300);
+  const debounce = useDebounce(keyword, 3000);
 
   useEffect(() => {
     fetchProjects();
-  }, [debounceProject]);
+  }, [debounce]);
 
   return (
     <div className={classes.sidebar}>
       <p className={classes.title}>Danh sách dự án:</p>
       <div className={classes.contentSidebar}>
         <Button
+          style={{
+            backgroundColor: selectedProject === null ? "#FB9678" : "transparent",
+            color: selectedProject === null ? "#fff" : "#FB9678",
+            borderRadius: "5px",
+            transition: "background-color 0.3s",
+          }}
           fullWidth
           color="secondary"
           onClick={() => {
             setProjectId("");
+            setSelectedProject(null);
           }}
         >
           Tất cả
@@ -63,19 +69,17 @@ function TimeSheetSidebar() {
             variant="outlined"
             fullWidth
             size="small"
-            placeholder="Tìm kiếm"
-            classes={{
-              root: classes.inputRoot,
-              input: classes.searchInput,
+            placeholder="Tìm kiếm dự án"
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              console.log(e.target.value);
             }}
-            onChange={(e) => projectStore.setKeyword(e.target.value)}
-            value={projectStore.keyword}
-            inputProps={{ "aria-label": "search" }}
           />
         </div>
-        <div className="">
-          {projectStore.projectList?.length > 0 ? (
-            <FixedSizeList height={300} width="100%" itemSize={40} itemCount={projectStore.projectList.length}>
+        <div>
+          {projectList?.length > 0 ? (
+            <FixedSizeList height={300} width="100%" itemSize={40} itemCount={projectList.length}>
               {({ index, style }) => {
                 const project = projectList[index];
 
@@ -91,12 +95,11 @@ function TimeSheetSidebar() {
                       transition: "background-color 0.3s",
                     }}
                     onClick={() => {
-                      setSelectProject(project);
+                      setSelectedProject(project);
                       setProjectId(project?.id);
-                      projectStore.setSelectedProject(project);
                     }}
                   >
-                    <ListItemText primary={project.name} />
+                    <ListItemText style={{ textAlign: "center" }} primary={project.name} />
                   </ListItem>
                 );
               }}

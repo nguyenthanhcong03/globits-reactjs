@@ -177,11 +177,9 @@ export default observer(function ProjectIndex() {
             fullWidth
             size="small"
             placeholder="Tìm kiếm dự án"
-            classes={{
-              root: classes.inputRoot,
-              input: classes.searchInput,
+            onChange={(e) => {
+              setKeyword(e.target.value);
             }}
-            onChange={(e) => setKeyword(e.target.value)}
             value={keyword}
             inputProps={{ "aria-label": "search" }}
           />

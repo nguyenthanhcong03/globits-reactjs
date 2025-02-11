@@ -1,19 +1,19 @@
-const { set } = require("lodash");
-const { useEffect, useState } = require("react");
+import { useState, useEffect } from "react";
 
-const useDebounce = (value, delay) => {
-  const [searchValue, setSearchValue] = useState("");
+function useDebounce(value, delay = 500) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setSearchValue(value);
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
     }, delay);
 
-    // Cleanup function
-    return () => clearTimeout(timeoutId);
-  }, [value]);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
 
-  return searchValue;
-};
+  return debouncedValue;
+}
 
 export default useDebounce;

@@ -25,6 +25,7 @@ export default class StaffStore {
     try {
       // let res = await searchStaffByPage(searchObject);
       let res = await getAllStaffs();
+      console.log(res);
 
       runInAction(() => {
         // this.staffList = res?.data?.content || [];
