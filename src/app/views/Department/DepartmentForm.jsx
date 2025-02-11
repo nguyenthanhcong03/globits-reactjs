@@ -6,11 +6,11 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import { makeStyles } from "@material-ui/core/styles";
 import { useFormik } from "formik";
+import MaterialTable from "material-table";
 import { observer } from "mobx-react";
 import { useEffect, useState } from "react";
 import * as Yup from "yup";
 import DatePickers from "../../common/staff/DatePickers";
-import TableCustom from "../../common/staff/TableCustom";
 import { useStore } from "../../stores";
 
 const useStyles = makeStyles((theme) => ({
@@ -61,18 +61,19 @@ function DepartmentForm() {
   const { departmentStore } = useStore();
   const {
     departmentList,
+    fetchDepartments,
     pageSize,
     setPageSize,
     totalPages,
     pageIndex,
     handleChangePage,
     selectedDepartment,
-    shouldOpenEditorDialog,
+    isOpenForm,
     updateDepartment,
     createDepartment,
     parent,
     setParent,
-    setShouldOpenEditorDialog,
+    setIsOpenForm,
   } = departmentStore;
   const formik = useFormik({
     initialValues: {
@@ -110,18 +111,14 @@ function DepartmentForm() {
         .min(1, "Thứ tự hiển thị phải lớn hơn hoặc bằng 1")
         .required("Không được bỏ trống!"),
     }),
-    onSubmit: async (values, { resetForm }) => {
-      const valuesUpdate = {
-        ...values,
-        parent,
-      };
+    onSubmit: (values) => {
       try {
         if (selectedDepartment?.id) {
-          updateDepartment(valuesUpdate);
+          updateDepartment(values);
         } else {
-          createDepartment(valuesUpdate);
+          createDepartment(values);
         }
-        resetForm();
+        setIsOpenForm(false);
       } catch (error) {
         console.error("Error submitting form:", error);
       }
@@ -141,10 +138,7 @@ function DepartmentForm() {
       sorting: false,
       filtering: false,
     },
-    {
-      title: "Phòng ban trực thuộc",
-      render: (rowData) => (rowData?.parent?.name ? rowData?.parent?.name : "Không có"),
-    },
+
     { title: "Tên phòng ban", field: "name" },
     { title: "Mã phòng ban", field: "code" },
     { title: "Mô tả", field: "description" },
@@ -155,13 +149,13 @@ function DepartmentForm() {
     { title: "Thứ tự hiển thị", field: "displayOrder" },
   ];
   useEffect(() => {
-    formik.resetForm();
-  }, [openDialog]);
+    fetchDepartments();
+  }, []);
   return (
     <>
       <Dialog
-        open={shouldOpenEditorDialog}
-        onClose={() => setShouldOpenEditorDialog(false)}
+        open={isOpenForm}
+        onClose={() => setIsOpenForm(false)}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
@@ -271,7 +265,7 @@ function DepartmentForm() {
                 helperText={formik.touched.foundedNumber && formik.errors.foundedNumber}
               />
               <DatePickers
-                labelDate="Ngày thành lập"
+                label="Ngày thành lập"
                 value={formik.values.foundedDate ? formik.values.foundedDate : new Date()}
                 onChange={(date) => formik.setFieldValue("foundedDate", date)}
                 isTime={false}
@@ -292,11 +286,11 @@ function DepartmentForm() {
               />
             </div>
             <div className={classes.buttonWrapper}>
-              <Button variant="contained" color="inherit" onClick={() => setShouldOpenEditorDialog(false)}>
+              <Button variant="contained" color="inherit" onClick={() => setIsOpenForm(false)}>
                 Hủy
               </Button>
               <Button type="submit" variant="contained" color="primary">
-                {selectedDepartment?.id ? "Lưu" : "Lưu"}
+                Lưu
               </Button>
             </div>
           </form>
@@ -310,15 +304,39 @@ function DepartmentForm() {
           aria-describedby="alert-dialog-description"
         >
           <DialogContent>
-            <TableCustom
-              rowsPerPage={pageSize}
-              setRowsPerPage={setPageSize}
-              totalPages={totalPages}
-              page={pageIndex}
-              handleChangePage={handleChangePage}
-              title={"Lựa chọn phòng ban"}
-              datas={departmentList}
+            <MaterialTable
+              title={"Danh sách phòng ban"}
+              data={departmentList}
               columns={columns}
+              parentChildData={(row, rows) => {
+                var list = rows.find((a) => a.id === row.parentId);
+                return list;
+              }}
+              options={{
+                // selection: true,
+                actionsColumnIndex: -1,
+                paging: true,
+                pageSize: pageSize,
+                search: false,
+                toolbar: true,
+                maxBodyHeight: "300px",
+                headerStyle: {
+                  backgroundColor: "#e3f2fd",
+                  // color: "#fff",
+                  position: "sticky",
+                },
+                // rowStyle: (rowData, index) => ({
+                //   backgroundColor: index % 2 === 1 ? "rgb(237, 245, 251)" : "#FFF",
+                // }),
+              }}
+              // onSelectionChange={(rows) => {
+              //   handleSelectList(rows);
+              // }}
+              // localization={{
+              //   body: {
+              //     emptyDataSourceMessage: `${t("general.emptyDataMessageTable")}`,
+              //   },
+              // }}
             />
           </DialogContent>
           <DialogActions>

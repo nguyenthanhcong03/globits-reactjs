@@ -1,15 +1,18 @@
-import { Icon, TextField } from "@material-ui/core";
+import { TextField } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogTitle from "@material-ui/core/DialogTitle";
-import IconButton from "@material-ui/core/IconButton";
 import { makeStyles } from "@material-ui/core/styles";
 import AddIcon from "@material-ui/icons/Add";
+import DeleteIcon from "@material-ui/icons/Delete";
+import EditIcon from "@material-ui/icons/Edit";
 import SearchIcon from "@material-ui/icons/Search";
+import useDebounce from "app/hooks/useDebounce";
+import MaterialTable from "material-table";
 import { observer } from "mobx-react";
 import { useEffect } from "react";
-import TableCustom from "../../common/staff/TableCustom";
+import { formatDateTime } from "utils";
 import { useStore } from "../../stores";
 import DepartmentForm from "./DepartmentForm";
 
@@ -76,30 +79,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const MaterialButton = ({ item, setSelected, onEdit, onDelete }) => (
-  <>
-    <IconButton
-      onClick={() => {
-        onEdit(true);
-        setSelected(item);
-      }}
-      aria-label="edit"
-    >
-      <Icon color="primary">edit</Icon>
-    </IconButton>
-    <IconButton
-      onClick={() => {
-        onDelete(true);
-        setSelected(item);
-      }}
-      aria-label="delete"
-    >
-      <Icon color="error">delete</Icon>
-    </IconButton>
-  </>
-);
-
 export default observer(function DepartmentIndex() {
+  const classes = useStyles();
+
   const { departmentStore } = useStore();
   const {
     fetchDepartments,
@@ -107,51 +89,24 @@ export default observer(function DepartmentIndex() {
     keyword,
     setKeyword,
     pageIndex,
-    setShouldOpenEditorDialog,
+    setIsOpenForm,
     setSelectedDepartment,
     departmentList,
-    setShouldOpenConfirmationDialog,
+    setIsOpenPopup,
     pageSize,
     setPageSize,
     totalPages,
     handleChangePage,
-    shouldOpenConfirmationDialog,
+    isOpenPopup,
     handleConfirmDelete,
     setSelectedList,
   } = departmentStore;
 
+  const debounce = useDebounce(keyword, 300);
+
   useEffect(() => {
     fetchDepartments();
-  }, [pageIndex, pageSize]);
-
-  const classes = useStyles();
-
-  const handleIconClick = () => {
-    updatePageData(keyword);
-  };
-
-  const handleKeyDown = (e) => {
-    setKeyword(e.target.value);
-    if (e.key === "Enter") {
-      updatePageData(keyword);
-    }
-  };
-
-  const formatDateTime = (timestamp, includeTime = true) => {
-    const date = new Date(timestamp);
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-
-    if (includeTime) {
-      const hours = date.getHours().toString().padStart(2, "0");
-      const minutes = date.getMinutes().toString().padStart(2, "0");
-      const seconds = date.getSeconds().toString().padStart(2, "0");
-
-      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-    }
-    return `${day}/${month}/${year}`;
-  };
+  }, [debounce]);
 
   const columns = [
     { title: "Tên Phòng ban", field: "name" },
@@ -167,12 +122,26 @@ export default observer(function DepartmentIndex() {
     {
       title: "Hành động",
       render: (rowData) => (
-        <MaterialButton
-          item={rowData}
-          onEdit={setShouldOpenEditorDialog}
-          onDelete={setShouldOpenConfirmationDialog}
-          setSelected={setSelectedDepartment}
-        />
+        <div>
+          <div>
+            <EditIcon
+              color="primary"
+              onClick={() => {
+                setIsOpenForm(true);
+                setSelectedDepartment(rowData);
+              }}
+              cursor="pointer"
+            />
+            <DeleteIcon
+              color="error"
+              cursor="pointer"
+              onClick={() => {
+                setIsOpenPopup(true);
+                setSelectedDepartment(rowData);
+              }}
+            />
+          </div>
+        </div>
       ),
     },
   ];
@@ -187,7 +156,7 @@ export default observer(function DepartmentIndex() {
           className={classes.button}
           startIcon={<AddIcon />}
           onClick={() => {
-            setShouldOpenEditorDialog(true);
+            setIsOpenForm(true);
             setSelectedDepartment(null);
           }}
         >
@@ -199,42 +168,62 @@ export default observer(function DepartmentIndex() {
             fullWidth
             size="small"
             placeholder="Tìm kiếm phòng ban"
-            classes={{
-              root: classes.inputRoot,
-              input: classes.searchInput,
+            onChange={(e) => {
+              setKeyword(e.target.value);
             }}
-            onChange={handleKeyDown}
-            onKeyPress={handleKeyDown}
+            value={keyword}
             inputProps={{ "aria-label": "search" }}
           />
-          <div className={classes.searchIcon} onClick={handleIconClick}>
+          <div className={classes.searchIcon}>
             <SearchIcon />
           </div>
         </div>
       </div>
-      <TableCustom
-        rowsPerPage={pageSize}
-        setRowsPerPage={setPageSize}
-        totalPages={totalPages}
-        page={pageIndex}
-        handleChangePage={handleChangePage}
+      <MaterialTable
         title={"Danh sách phòng ban"}
-        datas={departmentList}
+        data={departmentList}
         columns={columns}
-        checkbox={true}
-        setSelectedList={setSelectedList}
+        parentChildData={(row, rows) => {
+          var list = rows.find((a) => a.id === row.parentId);
+          return list;
+        }}
+        options={{
+          selection: true,
+          actionsColumnIndex: -1,
+          paging: true,
+          pageSize: pageSize,
+          search: false,
+          toolbar: true,
+          maxBodyHeight: "300px",
+          headerStyle: {
+            backgroundColor: "#e3f2fd",
+            // color: "#fff",
+            position: "sticky",
+          },
+          // rowStyle: (rowData, index) => ({
+          //   backgroundColor: index % 2 === 1 ? "rgb(237, 245, 251)" : "#FFF",
+          // }),
+        }}
+        // onSelectionChange={(rows) => {
+        //   handleSelectList(rows);
+        // }}
+        // localization={{
+        //   body: {
+        //     emptyDataSourceMessage: `${t("general.emptyDataMessageTable")}`,
+        //   },
+        // }}
       />
       <DepartmentForm />
-      {shouldOpenConfirmationDialog && (
+      {isOpenPopup && (
         <Dialog
-          open={shouldOpenConfirmationDialog}
-          onClose={() => setShouldOpenConfirmationDialog(false)}
+          open={isOpenPopup}
+          onClose={() => setIsOpenPopup(false)}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
           <DialogTitle id="alert-dialog-title">{"Bạn có muốn xóa không?"}</DialogTitle>
           <DialogActions>
-            <Button onClick={() => setShouldOpenConfirmationDialog(false)} color="primary">
+            <Button onClick={() => setIsOpenPopup(false)} color="primary">
               Hủy
             </Button>
             <Button onClick={handleConfirmDelete} color="primary" autoFocus>

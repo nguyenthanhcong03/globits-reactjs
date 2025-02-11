@@ -98,7 +98,7 @@ export default function DatePickers({
             value={value}
             onChange={onChange}
             ampm={false} // 24h format
-            disablePast // Không chọn ngày quá khứ
+            // disablePast // Không chọn ngày quá khứ
             format="dd/MM/yyyy HH:mm" // Định dạng ngày giờ
             inputVariant="outlined"
             fullWidth
@@ -110,7 +110,7 @@ export default function DatePickers({
           <DatePicker
             value={value}
             onChange={onChange}
-            disablePast
+            // disablePast
             format="dd/MM/yyyy"
             inputVariant="outlined"
             fullWidth

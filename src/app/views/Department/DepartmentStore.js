@@ -1,5 +1,4 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { toast } from "react-toastify";
 import {
   createDepartment,
   deleteDepartment,
@@ -20,9 +19,9 @@ export default class DepartmentStore {
   pageSize = 10;
   keyword = "";
   isLoading = false;
-  shouldOpenEditorDialog = false;
-  shouldOpenConfirmationDialog = false;
-  shouldOpenSelectDepartmentDialog = false;
+  isOpenForm = false;
+  isOpenPopup = false;
+  isOpenSelectDepartmentDialog = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -37,8 +36,8 @@ export default class DepartmentStore {
   setSelectedList = (state) => {
     this.selectedList = state;
   };
-  setShouldOpenSelectDepartmentDialog = (state) => {
-    this.shouldOpenSelectDepartmentDialog = state;
+  setIsOpenSelectDepartmentDialog = (state) => {
+    this.isOpenSelectDepartmentDialog = state;
   };
   setSelectedDepartment = (value) => {
     this.selectedDepartment = value;
@@ -70,9 +69,20 @@ export default class DepartmentStore {
       recurse(departments);
       return result;
     }
+    // function flattenDepartments(departments, parentId = null) {
+    //   return departments.flatMap((department) => {
+    //     const { children, ...rest } = department;
+    //     return [
+    //       { ...rest, parentId },
+    //       ...flattenDepartments(children || [], department.id),
+    //     ];
+    //   });
+    // }
 
     try {
       let res = await pagingDepartments(searchObject);
+      console.log(res.data.content);
+
       runInAction(() => {
         if (res?.data?.content) {
           this.departmentList = flattenDepartments(res.data.content);
@@ -84,22 +94,18 @@ export default class DepartmentStore {
         this.isLoading = false;
       });
     } catch (error) {
-      toast.warning("Failed to load departments.");
+      console.log("error", error);
       this.isLoading = false;
     }
   };
 
-  setShouldOpenConfirmationDialog = (state) => {
-    this.shouldOpenConfirmationDialog = state;
+  setIsOpenPopup = (state) => {
+    this.isOpenPopup = state;
   };
 
-  setShouldOpenEditorDialog = (state) => {
-    this.shouldOpenEditorDialog = state;
+  setIsOpenForm = (state) => {
+    this.isOpenForm = state;
   };
-
-  handleClose() {
-    this.shouldOpenEditorDialog = false;
-  }
 
   updatePageData = (keyword) => {
     if (keyword !== "" && keyword !== undefined && keyword !== null) {
@@ -124,26 +130,20 @@ export default class DepartmentStore {
     this.setPage(newPage);
   };
 
-  handleClose = (state) => {
-    this.shouldOpenEditorDialog = false;
-    this.shouldOpenConfirmationDialog = false;
-    if (state) this.fetchDepartments();
-  };
-
   handleConfirmDelete = async () => {
     try {
       console.log("hien", this.selectedDepartment.id);
       const res = await deleteDepartment(this.selectedDepartment.id);
       if (res?.data) {
         this.handleClose(true);
-        toast.success("Deleted successfully.");
+        console.log("Deleted successfully.");
       } else {
         console.error(res?.data);
-        toast.warning("Deleted failure.");
+        console.log("Deleted failure.");
       }
     } catch (error) {
       console.log(error);
-      toast.error("An error occurred. Please try again later.");
+      console.log("An error occurred. Please try again later.");
     }
   };
 
@@ -169,23 +169,20 @@ export default class DepartmentStore {
       console.log(this);
       const res = await editDepartment(department);
       this.handleClose(true);
-      toast.success("Updated successfully!");
+      console.log("Updated successfully!");
       return res?.data;
     } catch (error) {
       console.log(error);
-      toast.warning("An error occurred while updating.");
+      console.log("An error occurred while updating.");
     }
   };
 
   createDepartment = async (department) => {
     try {
-      const res = await createDepartment(department);
-      this.handleClose(true);
-      toast.success("Created successfully!");
-      return res?.data;
+      await createDepartment(department);
+      this.fetchDepartments();
     } catch (error) {
-      console.log(error);
-      toast.warning("An error occurred while saving.");
+      console.error("Failed to add department", error);
     }
   };
 
@@ -198,7 +195,7 @@ export default class DepartmentStore {
     this.pageSize = 10;
     this.keyword = "";
     this.isLoading = false;
-    this.shouldOpenEditorDialog = false;
-    this.shouldOpenConfirmationDialog = false;
+    this.isOpenForm = false;
+    this.isOpenPopup = false;
   };
 }
