@@ -98,7 +98,7 @@ function TimeSheetTable() {
         return (
           <div>
             <p>
-              Thời gian bắt đầu:
+              {"Thời gian bắt đầu: "}
               <span
                 style={{
                   color: "#01C0C8",
@@ -108,7 +108,7 @@ function TimeSheetTable() {
               </span>
             </p>
             <p>
-              Thời gian kết thúc:
+              {"Thời gian kết thúc: "}
               <span
                 style={{
                   color: "#01C0C8",
@@ -118,7 +118,7 @@ function TimeSheetTable() {
               </span>
             </p>
             <p>
-              Tổng thời gian:
+              {"Tổng thời gian: "}
               <span
                 style={{
                   color: "#01C0C8",
