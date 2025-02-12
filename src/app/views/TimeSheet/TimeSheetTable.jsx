@@ -59,6 +59,7 @@ function TimeSheetTable() {
   useEffect(() => {
     search();
   }, []);
+  console.log(timeSheetList);
 
   const columns = [
     {
@@ -73,6 +74,7 @@ function TimeSheetTable() {
               onClick={() => {
                 setIsOpenForm(true);
                 setSelectedTimeSheet(rowData);
+                console.log(rowData);
               }}
               cursor="pointer"
             />

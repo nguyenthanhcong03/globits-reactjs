@@ -101,7 +101,12 @@ export default observer(function TimeSheetForm() {
     endTime: selectedTimeSheet?.endTime || new Date(),
     priority: selectedTimeSheet?.priority || "",
     description: selectedTimeSheet?.description || "",
-    details: selectedTimeSheet?.details || [],
+    details: selectedTimeSheet?.details || [
+      {
+        workingItemTitle: selectedTimeSheet?.details?.workingItemTitle || "",
+        emoloyee: selectedTimeSheet?.details?.emoloyee || null,
+      },
+    ],
   };
   const validationSchema = Yup.object({
     // description: Yup.string()
@@ -117,9 +122,11 @@ export default observer(function TimeSheetForm() {
     //     .required("Bạn cần chọn mức độ ưu tiên"),
   });
   const onSubmit = async (values, { resetForm }) => {
+    console.log(values);
+
     try {
       if (selectedTimeSheet?.id) {
-        updateData(values);
+        // updateData(values);
       } else {
         saveData(values);
       }
@@ -130,8 +137,12 @@ export default observer(function TimeSheetForm() {
     }
   };
 
-  const [staffProject, setStaffProject] = useState(selectedTimeSheet?.timeSheetStaff || []);
-  const [staffSelecteds, setStaffSelecteds] = useState(staffProject || []);
+  const selectedProject = projectStore.projectList.find((project) => project.id === selectedTimeSheet?.project?.id);
+  console.log(selectedProject);
+
+  // const [staffProject, setStaffProject] = useState(selectedTimeSheet?.timeSheetStaff || []);
+  const [staffProject, setStaffProject] = useState(selectedProject?.projectStaff || []);
+  const [staffSelecteds, setStaffSelecteds] = useState(selectedTimeSheet?.timeSheetStaff || []);
 
   useEffect(() => {
     console.log(selectedTimeSheet);
@@ -173,7 +184,7 @@ export default observer(function TimeSheetForm() {
                       });
                       setFieldValue("timeSheetStaff", "");
                     }}
-                    label="Du an"
+                    label="Dự án"
                     error={touched.project && Boolean(errors.project)}
                   >
                     {projectStore.projectList.map((project) => (
@@ -227,7 +238,7 @@ export default observer(function TimeSheetForm() {
                 <Autocomplete
                   fullWidth
                   multiple
-                  options={Array.isArray(staffProject) ? staffProject : []}
+                  options={staffProject}
                   disableCloseOnSelect
                   getOptionLabel={(option) => (option ? `${option.lastName || ""} ${option.firstName || ""}` : "")}
                   renderOption={(option, { selected }) => (
@@ -236,21 +247,28 @@ export default observer(function TimeSheetForm() {
                         icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                         checkedIcon={<CheckBoxIcon fontSize="small" />}
                         style={{ marginRight: 8 }}
-                        checked={selected}
+                        checked={staffSelecteds.some((staff) => staff.id === option?.id)}
+                        // checked={selected}
                       />
                       {`${option?.lastName || ""} ${option?.firstName || ""}`}
                     </React.Fragment>
                   )}
                   value={values.timeSheetStaff || []}
                   onChange={(event, newValue) => {
-                    // const staff = newValue.map((staff) => ({
-                    //   id: staff.id,
-                    //   firstName: staff.firstName,
-                    //   lastName: staff.lastName,
-                    // }));
-                    // setFieldValue("timeSheetStaff", staff);
-                    setStaffSelecteds(newValue);
-                    setFieldValue("timeSheetStaff", newValue);
+                    console.log(staffSelecteds.find((staff) => staff?.id === newValue[1]?.id));
+                    console.log(
+                      "ahahhahah",
+                      values.timeSheetStaff.filter((staff) => staff?.id !== newValue[1]?.id)
+                    );
+                    if (!values.timeSheetStaff.find((staff) => staff?.id === newValue[1]?.id)) {
+                      setStaffSelecteds(newValue);
+                      setFieldValue("timeSheetStaff", newValue);
+                    } else {
+                      setFieldValue(
+                        "timeSheetStaff",
+                        values.timeSheetStaff.filter((staff) => staff?.id !== newValue[1]?.id)
+                      );
+                    }
                   }}
                   renderInput={(params) => (
                     <TextField {...params} variant="outlined" label="Chọn nhân viên" placeholder="Nhân viên" />
@@ -333,6 +351,7 @@ export default observer(function TimeSheetForm() {
                                         }}
                                         label="Nhân viên"
                                       >
+                                        {/* {staffSelecteds.map((staffItem) => ( */}
                                         {staffSelecteds.map((staffItem) => (
                                           <MenuItem key={staffItem.id} value={staffItem.id}>
                                             {staffItem.firstName}

@@ -81,7 +81,6 @@ export default class DepartmentStore {
 
     try {
       let res = await pagingDepartments(searchObject);
-      console.log(res.data.content);
 
       runInAction(() => {
         if (res?.data?.content) {
@@ -130,21 +129,32 @@ export default class DepartmentStore {
     this.setPage(newPage);
   };
 
-  handleConfirmDelete = async () => {
+  // deleteDepartment = async () => {
+  //   try {
+  //     console.log("hien", this.selectedDepartment.id);
+  //     const res = await deleteDepartment(this.selectedDepartment.id);
+  //     if (res?.data) {
+  //       this.handleClose(true);
+  //       console.log("Deleted successfully.");
+  //     } else {
+  //       console.error(res?.data);
+  //       console.log("Deleted failure.");
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     console.log("An error occurred. Please try again later.");
+  //   }
+  // };
+
+  deleteDepartment = async (id) => {
     try {
-      console.log("hien", this.selectedDepartment.id);
-      const res = await deleteDepartment(this.selectedDepartment.id);
-      if (res?.data) {
-        this.handleClose(true);
-        console.log("Deleted successfully.");
-      } else {
-        console.error(res?.data);
-        console.log("Deleted failure.");
-      }
+      await deleteDepartment(id);
+      this.fetchDepartments();
     } catch (error) {
-      console.log(error);
-      console.log("An error occurred. Please try again later.");
+      console.error("Error deleting staff:", error);
+      alert("Không thể xóa nhân viên.");
     }
+    this.setIsOpenPopup(false);
   };
 
   getDepartment = async (id) => {

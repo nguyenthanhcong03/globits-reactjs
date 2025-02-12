@@ -156,16 +156,16 @@ export default class TimeSheetStore {
     }
   };
 
-  resetStore = () => {
-    this.timeSheetList = [];
-    this.totalElements = 0;
-    this.totalPages = 0;
-    this.selectedTimeSheet = null;
-    this.pageIndex = 1;
-    this.pageSize = 10;
-    this.keyword = "";
-    this.isLoading = false;
-    this.isOpenForm = false;
-    this.isOpenPopup = false;
-  };
+  // resetStore = () => {
+  //   this.timeSheetList = [];
+  //   this.totalElements = 0;
+  //   this.totalPages = 0;
+  //   this.selectedTimeSheet = null;
+  //   this.pageIndex = 1;
+  //   this.pageSize = 10;
+  //   this.keyword = "";
+  //   this.isLoading = false;
+  //   this.isOpenForm = false;
+  //   this.isOpenPopup = false;
+  // };
 }

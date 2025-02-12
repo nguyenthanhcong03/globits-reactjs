@@ -12,9 +12,10 @@ import { useEffect, useState } from "react";
 import * as Yup from "yup";
 import DatePickers from "../../common/staff/DatePickers";
 import { useStore } from "../../stores";
+import { set } from "lodash";
 
 const useStyles = makeStyles((theme) => ({
-  wapper: {
+  wrapper: {
     display: "flex",
     flexWrap: "wrap",
     justifyContent: "space-between",
@@ -68,6 +69,7 @@ function DepartmentForm() {
     pageIndex,
     handleChangePage,
     selectedDepartment,
+    setSelectedDepartment,
     isOpenForm,
     updateDepartment,
     createDepartment,
@@ -75,9 +77,16 @@ function DepartmentForm() {
     setParent,
     setIsOpenForm,
   } = departmentStore;
+  let departmentParentList = selectedDepartment
+    ? departmentList.filter((department) => department?.id !== selectedDepartment?.id)
+    : departmentList;
+  console.log("departmentParentList", departmentParentList);
+
+  const [selectedRow, setSelectedRow] = useState(null);
+
   const formik = useFormik({
     initialValues: {
-      id: selectedDepartment?.id || "",
+      parent: selectedDepartment?.parent || null,
       name: selectedDepartment?.name || "",
       code: selectedDepartment?.code || "",
       description: selectedDepartment?.description || "",
@@ -112,12 +121,17 @@ function DepartmentForm() {
         .required("Không được bỏ trống!"),
     }),
     onSubmit: (values) => {
+      // const newValue = { ...values, parent };
+      console.log(values);
+
       try {
         if (selectedDepartment?.id) {
-          updateDepartment(values);
+          // updateDepartment(newValue);
         } else {
+          // console.log(values);
           createDepartment(values);
         }
+        setSelectedRow(null);
         setIsOpenForm(false);
       } catch (error) {
         console.error("Error submitting form:", error);
@@ -129,10 +143,23 @@ function DepartmentForm() {
       title: "Chọn",
       render: (rowData) => (
         <FormControlLabel
-          onClick={() => {
-            setParent(rowData);
-          }}
-          control={<Radio checked={parent?.id === rowData?.id || selectedDepartment?.parent?.id === rowData?.id} />}
+          // onClick={() => {
+          //   // setParent(rowData);
+          //   console.log("hâh");
+
+          //   setSelectedDepartment(rowData);
+          // }}
+          // control={<Radio checked={parent?.id === rowData?.id || selectedDepartment?.parent?.id === rowData?.id} />}
+          control={
+            <Radio
+              onChange={() => setSelectedRow(rowData)}
+              // checked={selectedDepartment?.parent?.id === rowData?.id || selectedRow?.id === rowData?.id}
+              checked={
+                selectedRow?.id === rowData?.id ||
+                (selectedRow === null && selectedDepartment?.parent?.id === rowData?.id)
+              }
+            />
+          }
         />
       ),
       sorting: false,
@@ -144,9 +171,6 @@ function DepartmentForm() {
     { title: "Mô tả", field: "description" },
     { title: "Chức năng", field: "func" },
     { title: "Khối ngành", field: "industryBlock" },
-    { title: "Số thành lập", field: "foundedNumber" },
-    { title: "Ngày thành lập", field: "foundedDate" },
-    { title: "Thứ tự hiển thị", field: "displayOrder" },
   ];
   useEffect(() => {
     fetchDepartments();
@@ -163,14 +187,15 @@ function DepartmentForm() {
           {selectedDepartment?.id ? "Chỉnh sửa phòng ban" : "Thêm mới phòng ban"}
         </DialogTitle>
         <DialogContent>
-          <div className={classes.parent}>
+          <form onSubmit={formik.handleSubmit}>
             <TextField
               className={classes.parentTextField}
               label="Đơn vị trực thuộc"
               variant="outlined"
               color="secondary"
               disabled
-              value={selectedDepartment?.parent?.name ? selectedDepartment.name : parent?.name || ""}
+              name="parent"
+              value={formik.values.parent?.name || selectedRow?.name || ""}
               InputProps={{
                 shrink: true,
                 readOnly: true,
@@ -186,9 +211,7 @@ function DepartmentForm() {
                 ),
               }}
             />
-          </div>
-          <form onSubmit={formik.handleSubmit}>
-            <div className={classes.wapper}>
+            <div className={classes.wrapper}>
               <TextField
                 className={classes.itemInput}
                 label="Tên phòng ban"
@@ -306,12 +329,14 @@ function DepartmentForm() {
           <DialogContent>
             <MaterialTable
               title={"Danh sách phòng ban"}
-              data={departmentList}
+              data={departmentParentList}
               columns={columns}
-              parentChildData={(row, rows) => {
-                var list = rows.find((a) => a.id === row.parentId);
-                return list;
-              }}
+              // parentChildData={(row, rows) => {
+              //   var list = rows.find((a) => a.id === row.parentId);
+              //   return list;
+              //   // rows.find((a) => a.id === row.parentId);
+              // }}
+              parentChildData={(row, rows) => rows.find((a) => a.id === row.parentId)}
               options={{
                 // selection: true,
                 actionsColumnIndex: -1,
@@ -349,7 +374,13 @@ function DepartmentForm() {
             >
               Đóng
             </Button>
-            <Button onClick={() => setOpenDialog(false)} color="primary">
+            <Button
+              onClick={() => {
+                setOpenDialog(false);
+                formik.setFieldValue("parent", selectedRow);
+              }}
+              color="primary"
+            >
               Lưu
             </Button>
           </DialogActions>

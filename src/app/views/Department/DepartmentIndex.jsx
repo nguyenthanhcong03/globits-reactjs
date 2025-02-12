@@ -85,10 +85,11 @@ export default observer(function DepartmentIndex() {
   const { departmentStore } = useStore();
   const {
     fetchDepartments,
-    updatePageData,
     keyword,
     setKeyword,
     pageIndex,
+    selectedDepartment,
+    isOpenForm,
     setIsOpenForm,
     setSelectedDepartment,
     departmentList,
@@ -98,7 +99,7 @@ export default observer(function DepartmentIndex() {
     totalPages,
     handleChangePage,
     isOpenPopup,
-    handleConfirmDelete,
+    deleteDepartment,
     setSelectedList,
   } = departmentStore;
 
@@ -213,7 +214,7 @@ export default observer(function DepartmentIndex() {
         //   },
         // }}
       />
-      <DepartmentForm />
+      {isOpenForm && <DepartmentForm />}
       {isOpenPopup && (
         <Dialog
           open={isOpenPopup}
@@ -226,8 +227,8 @@ export default observer(function DepartmentIndex() {
             <Button onClick={() => setIsOpenPopup(false)} color="primary">
               Hủy
             </Button>
-            <Button onClick={handleConfirmDelete} color="primary" autoFocus>
-              Xác nhận
+            <Button onClick={() => deleteDepartment(selectedDepartment.id)} color="primary" autoFocus>
+              Có
             </Button>
           </DialogActions>
         </Dialog>
