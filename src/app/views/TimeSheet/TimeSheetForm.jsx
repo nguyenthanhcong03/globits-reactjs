@@ -247,28 +247,28 @@ export default observer(function TimeSheetForm() {
                         icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                         checkedIcon={<CheckBoxIcon fontSize="small" />}
                         style={{ marginRight: 8 }}
-                        checked={staffSelecteds.some((staff) => staff.id === option?.id)}
-                        // checked={selected}
+                        // checked={staffSelecteds.some((staff) => staff.id === option?.id)}
+                        checked={selected}
                       />
                       {`${option?.lastName || ""} ${option?.firstName || ""}`}
                     </React.Fragment>
                   )}
                   value={values.timeSheetStaff || []}
                   onChange={(event, newValue) => {
-                    console.log(staffSelecteds.find((staff) => staff?.id === newValue[1]?.id));
-                    console.log(
-                      "ahahhahah",
-                      values.timeSheetStaff.filter((staff) => staff?.id !== newValue[1]?.id)
-                    );
-                    if (!values.timeSheetStaff.find((staff) => staff?.id === newValue[1]?.id)) {
-                      setStaffSelecteds(newValue);
-                      setFieldValue("timeSheetStaff", newValue);
-                    } else {
-                      setFieldValue(
-                        "timeSheetStaff",
-                        values.timeSheetStaff.filter((staff) => staff?.id !== newValue[1]?.id)
-                      );
-                    }
+                    console.log(newValue);
+
+                    // if (!staffSelecteds.find((staff) => staff?.id === newValue[1]?.id)) {
+                    //   setStaffSelecteds("ffffffffffffffffffffffffff", newValue);
+                    //   setFieldValue("timeSheetStaff", newValue);
+                    // } else {
+                    //   setFieldValue(
+                    //     "timeSheetStaff",
+                    //     values.timeSheetStaff.filter((staff) => staff?.id !== newValue[1]?.id)
+                    //   );
+                    // }
+
+                    setStaffSelecteds(newValue);
+                    setFieldValue("timeSheetStaff", newValue);
                   }}
                   renderInput={(params) => (
                     <TextField {...params} variant="outlined" label="Chọn nhân viên" placeholder="Nhân viên" />
